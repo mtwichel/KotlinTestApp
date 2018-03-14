@@ -33,7 +33,7 @@ class MainAdapter(var recipies: List<Recipie>,
         val recipie = recipies[position]
         holder?.title?.text = recipie.title
         if(recipie.imgUrl.isNotEmpty()){
-            Glide.with(holder?.title?.context)
+            Glide.with(holder?.title?.context!!)
                     .load(recipie.imgUrl)
                     .into(holder?.recipie_photo)
         }
