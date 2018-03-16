@@ -1,48 +1,52 @@
 package com.example.android.kotlintest
 
 import android.support.v7.widget.RecyclerView
-import android.text.Layout
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import com.bumptech.glide.Glide
-import com.example.android.kotlintest.model.Recipie
-import java.text.FieldPosition
+import com.example.android.kotlintest.model.Recipe
 
 /**
  * Created by marcus.twichel on 3/14/18.
  */
-class MainAdapter(var recipies: List<Recipie>,
+class MainAdapter(var recipes: List<Recipe>,
                   var clickListener: View.OnClickListener) :
-        RecyclerView.Adapter<MainAdapter.RecipieViewHolder>() {
-    override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): RecipieViewHolder {
-        return RecipieViewHolder(LayoutInflater.from(parent?.context).inflate(R.layout.recipie_item, parent, false))
+        RecyclerView.Adapter<MainAdapter.RecipeViewHolder>() {
+    override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): RecipeViewHolder {
+        return RecipeViewHolder(LayoutInflater.from(parent?.context).inflate(R.layout.recipe_item, parent, false))
     }
 
-    fun getRecipie(adapterPosition: Int) : Recipie{
-        return recipies[adapterPosition]
+    fun getRecipe(adapterPosition: Int) : Recipe{
+        return recipes[adapterPosition]
     }
 
     override fun getItemCount(): Int {
-        return recipies.size
+        return recipes.size
     }
 
-    override fun onBindViewHolder(holder: RecipieViewHolder?, position: Int) {
-        val recipie = recipies[position]
+    override fun onBindViewHolder(holder: RecipeViewHolder?, position: Int) {
+        val recipie = recipes[position]
         holder?.title?.text = recipie.title
-        if(recipie.imgUrl.isNotEmpty()){
+        if(recipie.image.isNotEmpty()){
             Glide.with(holder?.title?.context!!)
-                    .load(recipie.imgUrl)
-                    .into(holder?.recipie_photo)
+                    .load(recipie.image)
+                    .into(holder?.recipe_photo)
         }
+        holder?.usedMissing?.text =
+                "Used: " +
+                recipie.usedIngredientCount.toString() +
+                " Missing: " +
+                recipie.missedIngredientCount.toString()
 
     }
 
-    inner class RecipieViewHolder(itemView : View) : RecyclerView.ViewHolder (itemView){
+    inner class RecipeViewHolder(itemView : View) : RecyclerView.ViewHolder (itemView){
         var title : TextView
-        var recipie_photo : ImageView
+        var recipe_photo : ImageView
+        var usedMissing : TextView
 
         init {
             if (clickListener != null){
@@ -50,7 +54,8 @@ class MainAdapter(var recipies: List<Recipie>,
             }
             itemView.tag = this
             title = itemView.findViewById(R.id.title) as TextView
-            recipie_photo = itemView.findViewById(R.id.recipie_photo) as ImageView
+            recipe_photo = itemView.findViewById(R.id.recipe_photo) as ImageView
+            usedMissing = itemView.findViewById(R.id.used_missing) as TextView
         }
     }
 }
