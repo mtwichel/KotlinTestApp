@@ -11,7 +11,6 @@ data class Recipe (val id: Int,
                    val usedIngredientCount: Int,
                    val missedIngredientCount : Int,
                    val ingredients: List<Ingredient>,
-                   val length: Length,
-                   val steps: RecipeSteps) : Serializable{
+                   val length: Length) : Serializable{
 
 }

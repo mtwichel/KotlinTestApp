@@ -2,7 +2,7 @@ package com.example.android.kotlintest.api
 
 import android.util.Log
 import com.example.android.kotlintest.model.Recipe
-import com.example.android.kotlintest.model.RecipeSteps
+import com.example.android.kotlintest.model.RecipeStepsResult
 import retrofit2.Callback
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -28,7 +28,7 @@ class RecipieRetriver {
         call.enqueue(callback)
     }
 
-    fun getRecipeById(callback: Callback<List<RecipeSteps>>, id: Int){
+    fun getRecipeById(callback: Callback<List<RecipeStepsResult>>, id: Int){
         val call = service.getRecipeById(id)
         Log.d("RecipeRetriver", call.request().url().toString())
         call.enqueue(callback)

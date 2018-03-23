@@ -3,39 +3,47 @@ package com.example.android.kotlintest
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.design.widget.CollapsingToolbarLayout
-import android.support.v4.view.ViewCompat
+import android.support.v7.widget.LinearLayoutManager
+import android.support.v7.widget.RecyclerView
+import android.support.v7.widget.Toolbar
 import android.util.Log
 import android.widget.ImageView
 import android.widget.TextView
 import com.bumptech.glide.Glide
 import com.example.android.kotlintest.api.RecipieRetriver
 import com.example.android.kotlintest.model.Recipe
-import com.example.android.kotlintest.model.RecipeSteps
-import org.w3c.dom.Text
+import com.example.android.kotlintest.model.RecipeStepsResult
+import com.example.android.kotlintest.model.Step
+import com.example.android.kotlintest.DetailStepsAdapter
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
 class DetailActivity : AppCompatActivity() {
 
-    var recipeSteps : RecipeSteps? = null;
-    var stepsText : TextView? = null
+    lateinit var recyclerView: RecyclerView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_detail)
 
+        //Add back button
+        val detailToolbar = findViewById(R.id.detail_toolbar) as Toolbar
+        setSupportActionBar(detailToolbar)
+        getSupportActionBar()?.setDisplayHomeAsUpEnabled(true);
+
+
         val recipe = intent.getSerializableExtra(RECIPE) as Recipe?
 
 
         //Add Steps
-        val stepsText = findViewById(R.id.instruction_text) as TextView
         getRecipe(recipe?.id!!)
 
 
         //Add Title
         val collapsing = findViewById(R.id.collapsing_toolbar) as CollapsingToolbarLayout
         collapsing.title = recipe?.title
+
 
 
         //Add Image
@@ -49,19 +57,23 @@ class DetailActivity : AppCompatActivity() {
 
     fun getRecipe(id : Int){
         var retriever = RecipieRetriver()
-        val callback = object : Callback<List<RecipeSteps>> {
-            override fun onFailure(call: Call<List<RecipeSteps>>?, t: Throwable?) {
-                Log.e("MainActivity", "Problems Calling API", t)
+        val callback = object : Callback<List<RecipeStepsResult>> {
+            override fun onFailure(call: Call<List<RecipeStepsResult>>?, t: Throwable?) {
+                Log.e("DetailActivity", "Problems Calling API", t)
             }
 
-            override fun onResponse(call: Call<List<RecipeSteps>>?, response: Response<List<RecipeSteps>>?) {
+            override fun onResponse(call: Call<List<RecipeStepsResult>>?, response: Response<List<RecipeStepsResult>>?) {
                 response?.isSuccessful.let {
-                    Log.i("MainActivity", "API Call successful")
-                    this@DetailActivity.recipeSteps = response?.body()?.get(0)
-                    var steps = recipeSteps?.steps
-                    stepsText?.text = steps?.get(0)?.step
-
-                    //TODO Finish
+                    Log.i("DetailActivity", "API Call successful")
+                    val recipeStepsResult = response?.body()?.get(0)
+                    if (recipeStepsResult == null){
+                        Log.d("DetailActivity", "recipeResult Null")
+                    }
+                    val steps = recipeStepsResult?.stepsList
+                    if (recipeStepsResult?.stepsList == null){
+                        Log.d("DetailActivity", "stepsList Null")
+                    }
+                    displaySteps(steps!!)
                 }
             }
 
@@ -72,5 +84,11 @@ class DetailActivity : AppCompatActivity() {
 
     companion object {
         val RECIPE = "RECIPE"
+    }
+
+    fun displaySteps(steps : List<Step>){
+        recyclerView = findViewById(R.id.steps_recycler_view) as RecyclerView
+        recyclerView.layoutManager = LinearLayoutManager(this)
+        recyclerView.adapter = DetailStepsAdapter(steps)
     }
 }

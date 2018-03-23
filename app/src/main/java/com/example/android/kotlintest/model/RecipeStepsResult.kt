@@ -5,5 +5,5 @@ import java.io.Serializable
 /**
  * Created by mtwichel on 3/16/18.
  */
-data class RecipeSteps(val steps: List<Step>) : Serializable {
+data class RecipeStepsResult(val stepsList: List<Step>) : Serializable {
 }
