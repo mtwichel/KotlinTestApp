@@ -29,7 +29,11 @@ class MainActivity : AppCompatActivity(), SearchFragment.OnFragmentInteractionLi
         fab = findViewById(R.id.fab) as FloatingActionButton
         fab.hide()
 
-
+        //set first screen to search
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.frag_holder, SearchFragment() as Fragment)
+                .commit()
 
         val bottomNavigationView = findViewById(R.id.bottom_nav) as BottomNavigationView
 
@@ -58,8 +62,6 @@ class MainActivity : AppCompatActivity(), SearchFragment.OnFragmentInteractionLi
                     }
                     true
                 })
-
-
     }
 
 

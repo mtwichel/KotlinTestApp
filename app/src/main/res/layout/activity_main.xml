@@ -23,7 +23,7 @@
     <FrameLayout
         android:id="@+id/frag_holder"
         android:layout_width="match_parent"
-        android:layout_height="459dp"
+        android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"></FrameLayout>
 
     <android.support.design.widget.FloatingActionButton

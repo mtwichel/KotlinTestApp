@@ -4,11 +4,23 @@ import android.content.Context
 import android.net.Uri
 import android.os.Bundle
 import android.support.v4.app.Fragment
+import android.support.v7.widget.DefaultItemAnimator
+import android.support.v7.widget.DividerItemDecoration
+import android.support.v7.widget.LinearLayoutManager
+import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 
 import com.example.android.kotlintest.R
+import com.example.android.kotlintest.RecyclerItemTouchHelper
+import com.example.android.kotlintest.model.KitchenItemAdapter
+import android.support.v7.widget.helper.ItemTouchHelper
+import android.support.design.widget.Snackbar
+import android.content.ClipData.Item
+import android.graphics.Color
+import android.util.Log
+
 
 /**
  * A simple [Fragment] subclass.
@@ -18,26 +30,48 @@ import com.example.android.kotlintest.R
  * Use the [KitchenFragment.newInstance] factory method to
  * create an instance of this fragment.
  */
-class KitchenFragment : Fragment() {
+class KitchenFragment : Fragment(), RecyclerItemTouchHelper.RecyclerItemTouchHelperListener {
 
-    // TODO: Rename and change types of parameters
-    private var mParam1: String? = null
-    private var mParam2: String? = null
+    lateinit var recyclerView : RecyclerView
+    lateinit var items : MutableList<String>
+    lateinit var mItemAdapter : KitchenItemAdapter
 
     private var mListener: OnFragmentInteractionListener? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (arguments != null) {
-            mParam1 = arguments.getString(ARG_PARAM1)
-            mParam2 = arguments.getString(ARG_PARAM2)
+
         }
+        items = ArrayList()
+        items.add("chicken")
+        items.add("rice")
+        items.add("coke")
+        items.add("bread")
+        items.add("salt")
+        items.add("curry")
+        items.add("beer")
+
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_kitchen, container, false)
+        val view = inflater.inflate(R.layout.fragment_kitchen, container, false)
+
+        recyclerView = view.findViewById(R.id.kitchen_items_view) as RecyclerView
+        mItemAdapter = KitchenItemAdapter(items)
+        recyclerView.layoutManager = LinearLayoutManager(recyclerView.context)
+        recyclerView.itemAnimator = DefaultItemAnimator()
+        recyclerView.addItemDecoration(DividerItemDecoration(recyclerView.context, DividerItemDecoration.VERTICAL))
+        recyclerView.adapter = mItemAdapter
+
+        val itemTouchHelperCallback = RecyclerItemTouchHelper(0, ItemTouchHelper.LEFT, this)
+        ItemTouchHelper(itemTouchHelperCallback).attachToRecyclerView(recyclerView)
+
+
+
+        return view
     }
 
     // TODO: Rename method, update argument and hook method into UI event
@@ -59,6 +93,32 @@ class KitchenFragment : Fragment() {
     override fun onDetach() {
         super.onDetach()
         mListener = null
+    }
+
+    override fun onSwiped(viewHolder: RecyclerView.ViewHolder?, direction: Int, position: Int?) {
+        if (viewHolder is KitchenItemAdapter.KitchenItemViewHolder) {
+            Log.d("KitchenFragment", "onSwiped called")
+
+            // get the removed item name to display it in snack bar
+            val name = items.get(viewHolder.getAdapterPosition())
+
+            // backup of removed item for undo purpose
+            val deletedItem = items.get(viewHolder.getAdapterPosition())
+            val deletedIndex = viewHolder.getAdapterPosition()
+
+            // remove the item from recycler view
+            mItemAdapter.removeItem(viewHolder.getAdapterPosition())
+
+            // showing snack bar with Undo option
+            val snackbar = Snackbar
+                    .make(recyclerView, name + " removed from cart!", Snackbar.LENGTH_LONG)
+            snackbar.setAction("UNDO", View.OnClickListener {
+                // undo is selected, restore the deleted item
+                mItemAdapter.restoreItem(deletedItem, deletedIndex)
+            })
+            snackbar.setActionTextColor(Color.YELLOW)
+            snackbar.show()
+        }
     }
 
     /**
