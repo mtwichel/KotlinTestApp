@@ -30,9 +30,9 @@ class DetailIngAdapter(var ings : List<Ingredient>) :
         if(currentStep.amount != 1.0){
             if(currentStep.amount - currentStep.amount.toInt() == 0.0 ){
                 //is whole
-                holder?.ingText?.text = "" + currentStep.amount.toInt() + " " + currentStep.unitLong + " " + currentStep.name;
+                holder?.ingText?.text = "" + currentStep.amount.toInt() + " " + currentStep.unit + " " + currentStep.name;
             }else {
-                holder?.ingText?.text = "" + currentStep.amount + " " + currentStep.unitLong + " " + currentStep.name;
+                holder?.ingText?.text = "" + currentStep.amount + " " + currentStep.unit + " " + currentStep.name;
             }
         }else{
             holder?.ingText?.text = "" + currentStep.amount.toInt() + " " + currentStep.unit + " " + currentStep.name;

@@ -8,6 +8,7 @@ import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.Toolbar
 import android.util.Log
+import android.view.MenuItem
 import android.widget.ImageView
 import android.widget.ProgressBar
 import com.bumptech.glide.Glide
@@ -123,5 +124,16 @@ class DetailActivity : AppCompatActivity() {
 
         ingRecyclerView.layoutManager = LinearLayoutManager(this)
         ingRecyclerView.adapter = DetailIngAdapter(ings)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.getItemId()) {
+            android.R.id.home -> {
+                onBackPressed()
+                return true
+            }
+        }
+
+        return super.onOptionsItemSelected(item)
     }
 }
