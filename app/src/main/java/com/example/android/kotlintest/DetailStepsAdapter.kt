@@ -38,7 +38,7 @@ class DetailStepsAdapter(var steps : List<Step>) :
 
             itemView.tag = this
             stepText = itemView.findViewById(R.id.step_text) as TextView
-            stepNumber = itemView.findViewById(R.id.step_text) as TextView
+            stepNumber = itemView.findViewById(R.id.step_number) as TextView
 
         }
     }

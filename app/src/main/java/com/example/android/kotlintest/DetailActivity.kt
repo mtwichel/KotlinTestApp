@@ -3,25 +3,26 @@ package com.example.android.kotlintest
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.design.widget.CollapsingToolbarLayout
+import android.support.design.widget.Snackbar
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.Toolbar
 import android.util.Log
 import android.widget.ImageView
-import android.widget.TextView
+import android.widget.ProgressBar
 import com.bumptech.glide.Glide
 import com.example.android.kotlintest.api.RecipieRetriver
-import com.example.android.kotlintest.model.Recipe
-import com.example.android.kotlintest.model.RecipeStepsResult
-import com.example.android.kotlintest.model.Step
-import com.example.android.kotlintest.DetailStepsAdapter
+import com.example.android.kotlintest.model.*
+import kotlinx.android.synthetic.main.activity_detail.*
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
 class DetailActivity : AppCompatActivity() {
 
-    lateinit var recyclerView: RecyclerView
+    lateinit var stepsRecyclerView: RecyclerView
+    lateinit var ingRecyclerView: RecyclerView
+    lateinit var progressBar: ProgressBar
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,6 +32,10 @@ class DetailActivity : AppCompatActivity() {
         val detailToolbar = findViewById(R.id.detail_toolbar) as Toolbar
         setSupportActionBar(detailToolbar)
         getSupportActionBar()?.setDisplayHomeAsUpEnabled(true);
+
+
+        progressBar = findViewById(R.id.progressBar) as ProgressBar
+        progressBar.setVisibility(ProgressBar.VISIBLE)
 
 
         val recipe = intent.getSerializableExtra(RECIPE) as Recipe?
@@ -57,29 +62,43 @@ class DetailActivity : AppCompatActivity() {
 
     fun getRecipe(id : Int){
         var retriever = RecipieRetriver()
-        val callback = object : Callback<List<RecipeStepsResult>> {
+        val stepsCallback = object : Callback<List<RecipeStepsResult>> {
             override fun onFailure(call: Call<List<RecipeStepsResult>>?, t: Throwable?) {
                 Log.e("DetailActivity", "Problems Calling API", t)
             }
 
             override fun onResponse(call: Call<List<RecipeStepsResult>>?, response: Response<List<RecipeStepsResult>>?) {
                 response?.isSuccessful.let {
-                    Log.i("DetailActivity", "API Call successful")
-                    val recipeStepsResult = response?.body()?.get(0)
-                    if (recipeStepsResult == null){
-                        Log.d("DetailActivity", "recipeResult Null")
+                    val recipeStepsResult = response?.body()
+                    if(recipeStepsResult?.size!=0) {
+                        val steps = recipeStepsResult?.get(0)?.steps
+                        displaySteps(steps!!)
+                    }else{
+                        Snackbar.make(this@DetailActivity.detail_toolbar, "No Steps Found", Snackbar.LENGTH_LONG).show()
                     }
-                    val steps = recipeStepsResult?.stepsList
-                    if (recipeStepsResult?.stepsList == null){
-                        Log.d("DetailActivity", "stepsList Null")
-                    }
-                    displaySteps(steps!!)
                 }
             }
 
         }
 
-        retriever.getRecipeById(callback, id)
+        val ingsCallback = object : Callback<RecipeIngResult> {
+            override fun onFailure(call: Call<RecipeIngResult>?, t: Throwable?) {
+                Log.e("DetailActivity", "Problems Calling API", t)
+            }
+
+            override fun onResponse(call: Call<RecipeIngResult>?, response: Response<RecipeIngResult>?) {
+                response?.isSuccessful.let {
+                    val recipeIngResult = response?.body()
+                    val ings = recipeIngResult?.extendedIngredients
+                    displayIng(ings!!)
+                }
+            }
+
+        }
+
+
+        retriever.getRecipeStepsById(stepsCallback, id)
+        retriever.getRecipeIngById(ingsCallback, id)
     }
 
     companion object {
@@ -87,8 +106,22 @@ class DetailActivity : AppCompatActivity() {
     }
 
     fun displaySteps(steps : List<Step>){
-        recyclerView = findViewById(R.id.steps_recycler_view) as RecyclerView
-        recyclerView.layoutManager = LinearLayoutManager(this)
-        recyclerView.adapter = DetailStepsAdapter(steps)
+        // on some click or some loading we need to wait for...
+
+        progressBar.setVisibility(ProgressBar.INVISIBLE)
+
+        stepsRecyclerView = findViewById(R.id.steps_recycler_view) as RecyclerView
+
+        stepsRecyclerView.layoutManager = LinearLayoutManager(this)
+        stepsRecyclerView.adapter = DetailStepsAdapter(steps)
+    }
+
+    fun displayIng(ings : List<Ingredient>){
+        // on some click or some loading we need to wait for...
+
+        ingRecyclerView = findViewById(R.id.ing_recycler_view) as RecyclerView
+
+        ingRecyclerView.layoutManager = LinearLayoutManager(this)
+        ingRecyclerView.adapter = DetailIngAdapter(ings)
     }
 }

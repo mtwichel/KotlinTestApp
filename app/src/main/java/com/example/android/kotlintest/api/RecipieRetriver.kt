@@ -2,6 +2,7 @@ package com.example.android.kotlintest.api
 
 import android.util.Log
 import com.example.android.kotlintest.model.Recipe
+import com.example.android.kotlintest.model.RecipeIngResult
 import com.example.android.kotlintest.model.RecipeStepsResult
 import retrofit2.Callback
 import retrofit2.Retrofit
@@ -28,8 +29,14 @@ class RecipieRetriver {
         call.enqueue(callback)
     }
 
-    fun getRecipeById(callback: Callback<List<RecipeStepsResult>>, id: Int){
-        val call = service.getRecipeById(id)
+    fun getRecipeStepsById(callback: Callback<List<RecipeStepsResult>>, id: Int){
+        val call = service.getRecipeStepsById(id)
+        Log.d("RecipeRetriver", call.request().url().toString())
+        call.enqueue(callback)
+    }
+
+    fun getRecipeIngById(callback: Callback<RecipeIngResult>, id: Int){
+        val call = service.getRecipeIngById(id)
         Log.d("RecipeRetriver", call.request().url().toString())
         call.enqueue(callback)
     }
