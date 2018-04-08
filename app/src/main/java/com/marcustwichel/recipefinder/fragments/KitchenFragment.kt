@@ -136,7 +136,6 @@ class KitchenFragment : Fragment(), RecyclerItemTouchHelper.RecyclerItemTouchHel
 
     override fun onSwiped(viewHolder: RecyclerView.ViewHolder?, direction: Int, position: Int?) {
         if (viewHolder is KitchenItemAdapter.KitchenItemViewHolder) {
-//            Log.d("KitchenFragment", "onSwiped called")
 
             // get the removed item name to display it in snack bar
             val name = items.get(viewHolder.getAdapterPosition())
@@ -157,10 +156,7 @@ class KitchenFragment : Fragment(), RecyclerItemTouchHelper.RecyclerItemTouchHel
                 mItemAdapter.restoreItem(deletedItem, deletedIndex)
             })
             snackbar.setActionTextColor(Color.YELLOW)
-            snackbar.show()
-
-            Log.i(TAG, "onswipe finished")
-        }
+            snackbar.show() }
     }
 
     /**

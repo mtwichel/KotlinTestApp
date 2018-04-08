@@ -25,19 +25,16 @@ class RecipieRetriver {
 
     fun getRecipes(callback: Callback<List<Recipe>>, searchString : String ) {
         val call = service.getRecipes(searchString)
-        Log.d("RecipeRetriver", call.request().url().toString())
         call.enqueue(callback)
     }
 
     fun getRecipeStepsById(callback: Callback<List<RecipeStepsResult>>, id: Int){
         val call = service.getRecipeStepsById(id)
-        Log.d("RecipeRetriver", call.request().url().toString())
         call.enqueue(callback)
     }
 
     fun getRecipeIngById(callback: Callback<RecipeIngResult>, id: Int){
         val call = service.getRecipeIngById(id)
-        Log.d("RecipeRetriver", call.request().url().toString())
         call.enqueue(callback)
     }
 }

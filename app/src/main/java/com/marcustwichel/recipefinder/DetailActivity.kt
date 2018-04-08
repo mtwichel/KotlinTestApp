@@ -65,7 +65,6 @@ class DetailActivity : AppCompatActivity() {
         var retriever = RecipieRetriver()
         val stepsCallback = object : Callback<List<RecipeStepsResult>> {
             override fun onFailure(call: Call<List<RecipeStepsResult>>?, t: Throwable?) {
-                Log.e("DetailActivity", "Problems Calling API", t)
             }
 
             override fun onResponse(call: Call<List<RecipeStepsResult>>?, response: Response<List<RecipeStepsResult>>?) {
@@ -84,7 +83,6 @@ class DetailActivity : AppCompatActivity() {
 
         val ingsCallback = object : Callback<RecipeIngResult> {
             override fun onFailure(call: Call<RecipeIngResult>?, t: Throwable?) {
-                Log.e("DetailActivity", "Problems Calling API", t)
             }
 
             override fun onResponse(call: Call<RecipeIngResult>?, response: Response<RecipeIngResult>?) {

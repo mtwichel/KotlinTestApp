@@ -72,7 +72,6 @@ class SearchFragment : Fragment(), View.OnClickListener {
 //                "Searching", Snackbar.LENGTH_INDEFINITE)
 
         searchButton.setOnClickListener {
-            Log.i("MainActivity", "Seaching for Recipies")
             hideKeyboard()
 //            seachingSnackbar?.show()
             searchRecipies(searchBar.text.toString())
@@ -107,12 +106,10 @@ class SearchFragment : Fragment(), View.OnClickListener {
         var retriever = RecipieRetriver()
         val callback = object : Callback<List<Recipe>> {
             override fun onFailure(call: Call<List<Recipe>>?, t: Throwable?) {
-                Log.e("MainActivity", "Problems Calling API", t)
             }
 
             override fun onResponse(call: Call<List<Recipe>>?, response: Response<List<Recipe>>?) {
                 response?.isSuccessful.let {
-                    Log.i("MainActivity", "API Call successful")
                     this@SearchFragment.recipes = response?.body()
                     mainAdapter = MainAdapter(this@SearchFragment.recipes!!,
                             this@SearchFragment)

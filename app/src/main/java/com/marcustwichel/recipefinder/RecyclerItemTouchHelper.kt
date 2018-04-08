@@ -53,7 +53,6 @@ class RecyclerItemTouchHelper(dragDirs : Int, swipeDirs : Int, listener: Recycle
 
 
     override fun onSwiped(viewHolder: RecyclerView.ViewHolder?, direction: Int) {
-//        Log.d("KitchenFragment", "onSwiped called")
         listener?.onSwiped(viewHolder, direction, viewHolder?.getAdapterPosition())
     }
 
