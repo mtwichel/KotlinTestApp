@@ -20,9 +20,12 @@ import android.widget.Toast
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.IdpResponse
 import android.support.annotation.NonNull
+import android.util.Log
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.gms.tasks.Task
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.EventListener
+import kotlin.collections.ArrayList
 
 
 class MainActivity : AppCompatActivity(),
@@ -30,9 +33,9 @@ class MainActivity : AppCompatActivity(),
         KitchenFragment.OnFragmentInteractionListener,
         ListFragment.OnFragmentInteractionListener{
 
-    val RC_SIGN_IN = 123
     lateinit var mAuth : FirebaseAuth
     lateinit var mDB : FirebaseFirestore
+    val TAG : String = "MainActivity"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,6 +45,9 @@ class MainActivity : AppCompatActivity(),
 
         mAuth = FirebaseAuth.getInstance()
         mDB = FirebaseFirestore.getInstance()
+
+
+
 
         //set first screen to search
         getSupportFragmentManager()
@@ -79,7 +85,6 @@ class MainActivity : AppCompatActivity(),
                 })
     }
 
-
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.menu_main, menu)
@@ -96,13 +101,18 @@ class MainActivity : AppCompatActivity(),
         when(id){
             R.id.action_sign_out -> {
                 signOut()
-                recreate()
+                val intent = Intent(this, IntroActivity::class.java)
+                startActivity(intent)
                 return true
             }
 
         }
         return false
 
+    }
+
+    override fun onBackPressed() {
+        finishAffinity()
     }
 
     private fun signOut(){
@@ -115,42 +125,15 @@ class MainActivity : AppCompatActivity(),
                 })
     }
 
-    private fun signIn() {
-        val providers = Arrays.asList(
-                AuthUI.IdpConfig.Builder(AuthUI.EMAIL_PROVIDER).build(),
-                AuthUI.IdpConfig.Builder(AuthUI.GOOGLE_PROVIDER).build())
-
-        startActivityForResult(
-                AuthUI.getInstance()
-                        .createSignInIntentBuilder()
-                        .setAvailableProviders(providers)
-                        .build(),
-                RC_SIGN_IN)
-    }
-
     override fun onStart() {
         super.onStart()
         // Check if user is signed in (non-null) and update UI accordingly.
         val currentUser = mAuth.currentUser
         if(currentUser == null){
-            signIn()
+
 
         }
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
-        super.onActivityResult(requestCode, resultCode, data)
 
-        if (requestCode == RC_SIGN_IN) {
-            val response = IdpResponse.fromResultIntent(data)
-
-            if (resultCode == Activity.RESULT_OK) {
-                // Successfully signed in
-                val user = FirebaseAuth.getInstance().currentUser
-                Toast.makeText(this, "Logged On as " + user?.displayName, Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(this, "LOGON FAILED", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
 }

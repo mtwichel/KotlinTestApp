@@ -18,6 +18,9 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.EventListener
+import com.google.firebase.firestore.FirebaseFirestore
 import com.marcustwichel.recipefinder.DetailActivity
 import com.marcustwichel.recipefinder.MainAdapter
 
@@ -38,6 +41,8 @@ import retrofit2.Response
  */
 class SearchFragment : Fragment(), View.OnClickListener {
 
+    val TAG: String? = "SearchFragment"
+
 
 
     private var mListener: OnFragmentInteractionListener? = null
@@ -45,12 +50,28 @@ class SearchFragment : Fragment(), View.OnClickListener {
     var mainAdapter : MainAdapter? = null
     lateinit var recyclerView: RecyclerView
     var seachingSnackbar : Snackbar? = null
+    lateinit var searchString : String
+
+    lateinit var mAuth : FirebaseAuth
+    lateinit var mDB : FirebaseFirestore
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (arguments != null) {
 
+
+        mAuth = FirebaseAuth.getInstance()
+        mDB = FirebaseFirestore.getInstance()
+
+        var items = ArrayList<String>()
+        if (mAuth.currentUser != null) {
+            mDB.collection("kitchens").document(mAuth.currentUser!!.uid).addSnapshotListener(
+                    EventListener() { documentSnapshot, exception ->
+                        if (documentSnapshot.exists()) {
+                            items = documentSnapshot.get("items") as ArrayList<String>
+                            searchString = list2String(items)
+                        }
+                    })
         }
     }
 
@@ -64,45 +85,31 @@ class SearchFragment : Fragment(), View.OnClickListener {
         recyclerView.layoutManager = LinearLayoutManager(view.context)
 
         val searchButton = view.findViewById(R.id.search_button) as Button
-        val searchBar = view.findViewById(R.id.search_bar) as EditText
+
 
         val linearLayout = view.findViewById(R.id.search_linear_layout) as LinearLayout
 
-//        seachingSnackbar = Snackbar.make(activity.main_view ,
-//                "Searching", Snackbar.LENGTH_INDEFINITE)
-
         searchButton.setOnClickListener {
-            hideKeyboard()
-//            seachingSnackbar?.show()
-            searchRecipies(searchBar.text.toString())
+            searchRecipies()
         }
-
-        searchBar.setOnEditorActionListener(object : TextView.OnEditorActionListener {
-            override fun onEditorAction(view: TextView?, actionId: Int, keyEvent: KeyEvent?): Boolean {
-                var handled : Boolean = false;
-                if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                    hideKeyboard()
-//                  seachingSnackbar?.show()
-                    searchRecipies(searchBar.text.toString())
-                    searchBar.clearFocus()
-                    handled = true;
-                }
-                return handled;
-            }
-        })
 
         return view
     }
 
-    private fun hideKeyboard() {
-        val view = activity?.currentFocus
-        if (view != null) {
-            val imm = context?.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-            imm.hideSoftInputFromWindow(view.windowToken, 0)
+    private fun list2String(list: ArrayList<String>) : String{
+        var ans : String = ""
+        list.forEach { string ->
+            ans += string + ","
         }
+        if(ans.get(ans.lastIndex)==','){
+            ans = ans.substring(0, ans.lastIndex)
+        }
+        Log.i(TAG, ans)
+        return ans
     }
 
-    private fun searchRecipies(searchString : String) {
+
+    private fun searchRecipies() {
         var retriever = RecipieRetriver()
         val callback = object : Callback<List<Recipe>> {
             override fun onFailure(call: Call<List<Recipe>>?, t: Throwable?) {

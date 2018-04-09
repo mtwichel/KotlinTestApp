@@ -13,20 +13,22 @@ import com.google.firebase.firestore.EventListener
 import com.google.firebase.firestore.FirebaseFirestore
 import com.marcustwichel.recipefinder.model.KitchenItemList
 
-val TAG = "KitchenItemAdapter"
 
-var mDB : FirebaseFirestore  = FirebaseFirestore.getInstance()
-var mAuth : FirebaseAuth= FirebaseAuth.getInstance()
-lateinit var items : ArrayList<String>
-var deletedItem : String = ""
-private var deletedIndex: Int = 0
 
 class KitchenItemAdapter() : RecyclerView.Adapter<KitchenItemAdapter.KitchenItemViewHolder>(), Serializable{
+
+    val TAG = "KitchenItemAdapter"
+
+    var mDB : FirebaseFirestore  = FirebaseFirestore.getInstance()
+    var mAuth : FirebaseAuth= FirebaseAuth.getInstance()
+    lateinit var items : ArrayList<String>
+    var deletedItem : String = ""
+    private var deletedIndex: Int = 0
 
     init {
         items = ArrayList()
         if (mAuth.currentUser != null) {
-            mDB.collection("users").document(mAuth.currentUser!!.uid).addSnapshotListener(EventListener() { documentSnapshot, exception ->
+            mDB.collection("kitchens").document(mAuth.currentUser!!.uid).addSnapshotListener(EventListener() { documentSnapshot, exception ->
                 if (documentSnapshot.exists()) {
                     var oldSize = items.size
                     items = documentSnapshot.get("items") as ArrayList<String>
@@ -63,7 +65,7 @@ class KitchenItemAdapter() : RecyclerView.Adapter<KitchenItemAdapter.KitchenItem
         items?.removeAt(position)
         var data= mutableMapOf<String, MutableList<String>>()
         data["items"] = items
-        mDB.collection("users").document(mAuth.currentUser!!.uid).set(data as MutableMap<String, Any>)
+        mDB.collection("kitchens").document(mAuth.currentUser!!.uid).set(data as MutableMap<String, Any>)
         notifyItemRemoved(position)
     }
 
@@ -71,7 +73,7 @@ class KitchenItemAdapter() : RecyclerView.Adapter<KitchenItemAdapter.KitchenItem
         items?.add(0, toTitleCase(item))
         var data= mutableMapOf<String, MutableList<String>>()
         data["items"] = items
-        mDB.collection("users").document(mAuth.currentUser!!.uid).set(data as MutableMap<String, Any>)
+        mDB.collection("kitchens").document(mAuth.currentUser!!.uid).set(data as MutableMap<String, Any>)
         notifyItemInserted(0)
     }
 
@@ -79,7 +81,7 @@ class KitchenItemAdapter() : RecyclerView.Adapter<KitchenItemAdapter.KitchenItem
         items?.add(pos, toTitleCase(item))
         var data= mutableMapOf<String, MutableList<String>>()
         data["items"] = items
-        mDB.collection("users").document(mAuth.currentUser!!.uid).set(data as MutableMap<String, Any>)
+        mDB.collection("kitchens").document(mAuth.currentUser!!.uid).set(data as MutableMap<String, Any>)
         notifyItemInserted(pos)
     }
 

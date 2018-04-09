@@ -5,22 +5,14 @@
     android:orientation="vertical"
     android:id="@+id/search_linear_layout">
 
-    <EditText
-        android:id="@+id/search_bar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:ems="10"
-        android:hint="Enter indgredients seperated by commas"
-        android:inputType="textPersonName"
-        android:windowSoftInputMode="stateHidden"
-        android:imeOptions="actionSearch"/>
-
 
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Search"
-        android:id="@+id/search_button"/>
+        android:id="@+id/search_button"
+        android:background="@color/colorPrimary"
+        android:textColor="@color/colorAccent"/>
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/recycler_view"
