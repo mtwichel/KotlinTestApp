@@ -13,7 +13,7 @@ import com.marcustwichel.recipefinder.recipefinder.model.Step
 class DetailStepsAdapter(var steps : List<Step>) :
         RecyclerView.Adapter<DetailStepsAdapter.StepViewHolder>() {
 
-    override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): StepViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): StepViewHolder {
         return StepViewHolder(LayoutInflater.from(parent?.context).inflate(R.layout.step_item, parent, false))
     }
 
@@ -21,7 +21,7 @@ class DetailStepsAdapter(var steps : List<Step>) :
         return steps.size
     }
 
-    override fun onBindViewHolder(holder: StepViewHolder?, position: Int) {
+    override fun onBindViewHolder(holder: StepViewHolder, position: Int) {
         val currentStep = steps[position]
         holder?.stepText?.text = currentStep.step
         holder?.stepNumber?.text = currentStep.number.toString()

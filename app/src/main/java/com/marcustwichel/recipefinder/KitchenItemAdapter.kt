@@ -1,19 +1,51 @@
 package com.marcustwichel.recipefinder
 
 import android.support.v7.widget.RecyclerView
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import java.io.Serializable
 import android.widget.RelativeLayout
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.EventListener
+import com.google.firebase.firestore.FirebaseFirestore
+import com.marcustwichel.recipefinder.model.KitchenItemList
 
+val TAG = "KitchenItemAdapter"
 
-/**
- * Created by marcus.twichel on 4/6/18.
- */
-class KitchenItemAdapter(val  items: MutableList<String>) : RecyclerView.Adapter<KitchenItemAdapter.KitchenItemViewHolder>(), Serializable{
-    override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): KitchenItemViewHolder {
+var mDB : FirebaseFirestore  = FirebaseFirestore.getInstance()
+var mAuth : FirebaseAuth= FirebaseAuth.getInstance()
+lateinit var items : ArrayList<String>
+var deletedItem : String = ""
+private var deletedIndex: Int = 0
+
+class KitchenItemAdapter() : RecyclerView.Adapter<KitchenItemAdapter.KitchenItemViewHolder>(), Serializable{
+
+    init {
+        items = ArrayList()
+        if (mAuth.currentUser != null) {
+            mDB.collection("users").document(mAuth.currentUser!!.uid).addSnapshotListener(EventListener() { documentSnapshot, exception ->
+                if (documentSnapshot.exists()) {
+                    var oldSize = items.size
+                    items = documentSnapshot.get("items") as ArrayList<String>
+                    if (oldSize == 0) {
+                        notifyDataSetChanged()
+                    } else if (oldSize > items.size) {
+                        //itemRemoved
+                        notifyDataSetChanged()
+                    } else if (oldSize < items.size) {
+                        //item added
+                        notifyItemInserted(0)
+                    }
+                    Log.d(TAG, "data changed")
+                }
+            })
+        }
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): KitchenItemViewHolder {
         return KitchenItemViewHolder(LayoutInflater.from(parent?.context).inflate(R.layout.kitchen_item, parent, false))
     }
 
@@ -21,18 +53,38 @@ class KitchenItemAdapter(val  items: MutableList<String>) : RecyclerView.Adapter
         return items.size
     }
 
-    override fun onBindViewHolder(holder: KitchenItemViewHolder?, position: Int) {
+    override fun onBindViewHolder(holder: KitchenItemViewHolder, position: Int) {
         holder?.itemName?.setText(items?.get(position))
     }
 
     fun removeItem(position: Int) {
+        deletedItem = items.get(position)
+        deletedIndex = position
         items?.removeAt(position)
+        var data= mutableMapOf<String, MutableList<String>>()
+        data["items"] = items
+        mDB.collection("users").document(mAuth.currentUser!!.uid).set(data as MutableMap<String, Any>)
         notifyItemRemoved(position)
     }
 
     fun addItem(item: String) {
         items?.add(0, toTitleCase(item))
+        var data= mutableMapOf<String, MutableList<String>>()
+        data["items"] = items
+        mDB.collection("users").document(mAuth.currentUser!!.uid).set(data as MutableMap<String, Any>)
         notifyItemInserted(0)
+    }
+
+    fun addItem(item: String, pos : Int) {
+        items?.add(pos, toTitleCase(item))
+        var data= mutableMapOf<String, MutableList<String>>()
+        data["items"] = items
+        mDB.collection("users").document(mAuth.currentUser!!.uid).set(data as MutableMap<String, Any>)
+        notifyItemInserted(pos)
+    }
+
+    fun restoreLastItem(){
+        addItem(deletedItem, deletedIndex)
     }
 
     private fun toTitleCase(string :String) : String{
@@ -41,12 +93,6 @@ class KitchenItemAdapter(val  items: MutableList<String>) : RecyclerView.Adapter
             1 -> string.toUpperCase()
             else -> string[0].toUpperCase() + string.substring(1)
         }
-    }
-
-    fun restoreItem(item: String, position: Int) {
-        items.add(position, item)
-        // notify item added by position
-        notifyItemInserted(position)
     }
 
 
@@ -66,5 +112,9 @@ class KitchenItemAdapter(val  items: MutableList<String>) : RecyclerView.Adapter
             itemName = itemView.findViewById(R.id.item_name) as TextView
 
         }
+    }
+
+    fun getItemName(adapterPosition: Int): String {
+        return items.get(adapterPosition)
     }
 }

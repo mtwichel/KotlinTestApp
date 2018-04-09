@@ -15,7 +15,7 @@ import com.marcustwichel.recipefinder.recipefinder.model.Recipe
 class MainAdapter(var recipes: List<Recipe>,
                   var clickListener: View.OnClickListener) :
         RecyclerView.Adapter<MainAdapter.RecipeViewHolder>() {
-    override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): RecipeViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecipeViewHolder {
         return RecipeViewHolder(LayoutInflater.from(parent?.context).inflate(R.layout.recipe_item, parent, false))
     }
 
@@ -27,7 +27,7 @@ class MainAdapter(var recipes: List<Recipe>,
         return recipes.size
     }
 
-    override fun onBindViewHolder(holder: RecipeViewHolder?, position: Int) {
+    override fun onBindViewHolder(holder: RecipeViewHolder, position: Int) {
         val recipie = recipes[position]
         holder?.title?.text = recipie.title
         if(recipie.image.isNotEmpty()){

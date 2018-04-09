@@ -24,7 +24,11 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.RelativeLayout
 import android.widget.TextView
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.EventListener
+import com.google.firebase.firestore.FirebaseFirestore
 import com.marcustwichel.recipefinder.R
+import com.marcustwichel.recipefinder.model.KitchenItemList
 
 
 /**
@@ -38,7 +42,6 @@ import com.marcustwichel.recipefinder.R
 class KitchenFragment : Fragment(), RecyclerItemTouchHelper.RecyclerItemTouchHelperListener {
 
     lateinit var recyclerView : RecyclerView
-    lateinit var items : MutableList<String>
     lateinit var mItemAdapter : KitchenItemAdapter
     lateinit var mRelativeLayout : RelativeLayout
     lateinit var itemInput : EditText
@@ -49,17 +52,7 @@ class KitchenFragment : Fragment(), RecyclerItemTouchHelper.RecyclerItemTouchHel
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (arguments != null) {
-
         }
-        items = ArrayList()
-        items.add("chicken")
-        items.add("rice")
-        items.add("coke")
-        items.add("bread")
-        items.add("salt")
-        items.add("curry")
-        items.add("beer")
-
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
@@ -70,7 +63,7 @@ class KitchenFragment : Fragment(), RecyclerItemTouchHelper.RecyclerItemTouchHel
         mRelativeLayout = view.findViewById(R.id.kitchen_frag_relative_layout) as RelativeLayout
 
         recyclerView = view.findViewById(R.id.kitchen_items_view) as RecyclerView
-        mItemAdapter = KitchenItemAdapter(items)
+        mItemAdapter = KitchenItemAdapter()
         recyclerView.layoutManager = LinearLayoutManager(recyclerView.context)
         recyclerView.itemAnimator = DefaultItemAnimator()
         recyclerView.addItemDecoration(DividerItemDecoration(recyclerView.context, DividerItemDecoration.VERTICAL))
@@ -101,12 +94,13 @@ class KitchenFragment : Fragment(), RecyclerItemTouchHelper.RecyclerItemTouchHel
         mItemAdapter.addItem(item)
         recyclerView.scrollToPosition(0)
 //        hideKeyboard()
+
     }
 
     private fun hideKeyboard() {
-        val view = activity.currentFocus
+        val view = activity?.currentFocus
         if (view != null) {
-            val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            val imm = context?.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
             imm.hideSoftInputFromWindow(view.windowToken, 0)
         }
     }
@@ -138,22 +132,21 @@ class KitchenFragment : Fragment(), RecyclerItemTouchHelper.RecyclerItemTouchHel
         if (viewHolder is KitchenItemAdapter.KitchenItemViewHolder) {
 
             // get the removed item name to display it in snack bar
-            val name = items.get(viewHolder.getAdapterPosition())
+            val name = mItemAdapter.getItemName(viewHolder.getAdapterPosition())
 
             // backup of removed item for undo purpose
-            val deletedItem = items.get(viewHolder.getAdapterPosition())
-            val deletedIndex = viewHolder.getAdapterPosition()
+
 
             // remove the item from recycler view
             mItemAdapter.removeItem(viewHolder.getAdapterPosition())
 
             // showing snack bar with Undo option
             val snackbar = Snackbar
-                    .make(getActivity().findViewById(android.R.id.content),
-                            name + " removed from kitchen", Snackbar.LENGTH_LONG)
+                    .make(getActivity()!!.findViewById(android.R.id.content),
+                              name + " removed from kitchen", Snackbar.LENGTH_LONG)
             snackbar.setAction("UNDO", View.OnClickListener {
                 // undo is selected, restore the deleted item
-                mItemAdapter.restoreItem(deletedItem, deletedIndex)
+                mItemAdapter.restoreLastItem()
             })
             snackbar.setActionTextColor(Color.YELLOW)
             snackbar.show() }

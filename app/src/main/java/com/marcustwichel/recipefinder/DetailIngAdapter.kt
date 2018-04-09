@@ -15,7 +15,7 @@ import com.marcustwichel.recipefinder.recipefinder.model.Ingredient
 class DetailIngAdapter(var ings : List<Ingredient>) :
         RecyclerView.Adapter<DetailIngAdapter.StepViewHolder>() {
 
-    override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): StepViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): StepViewHolder {
         return StepViewHolder(LayoutInflater.from(parent?.context).inflate(R.layout.ing_item, parent, false))
     }
 
@@ -23,7 +23,7 @@ class DetailIngAdapter(var ings : List<Ingredient>) :
         return ings.size
     }
 
-    override fun onBindViewHolder(holder: StepViewHolder?, position: Int) {
+    override fun onBindViewHolder(holder: StepViewHolder, position: Int) {
         val currentStep = ings[position]
         if(currentStep.amount != 1.0){
             if(currentStep.amount - currentStep.amount.toInt() == 0.0 ){
