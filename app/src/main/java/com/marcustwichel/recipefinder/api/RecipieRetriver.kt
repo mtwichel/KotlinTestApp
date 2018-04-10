@@ -1,6 +1,7 @@
 package com.marcustwichel.recipefinder.recipefinder.api
 
 import android.util.Log
+import com.marcustwichel.recipefinder.model.RecipeSearchResult
 import com.marcustwichel.recipefinder.recipefinder.model.Recipe
 import com.marcustwichel.recipefinder.recipefinder.model.RecipeIngResult
 import com.marcustwichel.recipefinder.recipefinder.model.RecipeStepsResult
@@ -13,6 +14,8 @@ import retrofit2.converter.gson.GsonConverterFactory
  */
 class RecipieRetriver {
 
+    val TAG = "RecipeRetriver"
+
     private val service : RecipieAPI
 
     init {
@@ -23,8 +26,12 @@ class RecipieRetriver {
         service = retrofit.create(RecipieAPI::class.java)
     }
 
-    fun getRecipes(callback: Callback<List<Recipe>>, searchString : String ) {
-        val call = service.getRecipes(searchString)
+    fun getRecipes(callback: Callback<RecipeSearchResult>,
+                   searchString : String,
+                   cuisine : String?,
+                   type : String?) {
+        val call = service.getRecipes(searchString, cuisine, type)
+        Log.d(TAG, call.request().url().toString())
         call.enqueue(callback)
     }
 

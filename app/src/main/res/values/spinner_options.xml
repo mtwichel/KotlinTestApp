@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="cuisine_types">
+        <item>No Preference</item>
+        <item>African</item>
+        <item>Chinese</item>
+        <item>Japanese</item>
+        <item>Korean</item>
+        <item>Vietnamese</item>
+        <item>Thai</item>
+        <item>Indian</item>
+        <item>British</item>
+        <item>Irish</item>
+        <item>French</item>
+        <item>Italian</item>
+        <item>Mexican</item>
+        <item>Spanish</item>
+        <item>Middle Eastern</item>
+        <item>Jewish</item>
+        <item>American</item>
+        <item>Cajun</item>
+        <item>Southern</item>
+        <item>Greek</item>
+        <item>German</item>
+        <item>Nordic</item>
+        <item>Eastern European</item>
+        <item>Caribbean</item>
+        <item>Latin American</item>
+    </string-array>
+
+    <string-array name="meal_types">
+        <item>No Preference</item>
+        <item>Main course</item>
+        <item>Side dish</item>
+        <item>Dessert</item>
+        <item>Appetizer</item>
+        <item>Salad</item>
+        <item>Bread</item>
+        <item>Breakfast</item>
+        <item>Soup</item>
+        <item>Beverage</item>
+        <item>Sauce</item>
+        <item>Drink</item>
+    </string-array>
+</resources>

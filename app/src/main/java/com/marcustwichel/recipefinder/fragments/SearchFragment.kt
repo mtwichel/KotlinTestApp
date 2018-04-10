@@ -14,10 +14,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
-import android.widget.Button
-import android.widget.EditText
-import android.widget.LinearLayout
-import android.widget.TextView
+import android.widget.*
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.EventListener
 import com.google.firebase.firestore.FirebaseFirestore
@@ -25,6 +22,7 @@ import com.marcustwichel.recipefinder.DetailActivity
 import com.marcustwichel.recipefinder.MainAdapter
 
 import com.marcustwichel.recipefinder.R
+import com.marcustwichel.recipefinder.model.RecipeSearchResult
 import com.marcustwichel.recipefinder.recipefinder.api.RecipieRetriver
 import com.marcustwichel.recipefinder.recipefinder.model.Recipe
 import retrofit2.Call
@@ -39,7 +37,8 @@ import retrofit2.Response
  * Use the [SearchFragment.newInstance] factory method to
  * create an instance of this fragment.
  */
-class SearchFragment : Fragment(), View.OnClickListener {
+class SearchFragment : Fragment(), View.OnClickListener, AdapterView.OnItemSelectedListener {
+
 
     val TAG: String? = "SearchFragment"
 
@@ -54,6 +53,12 @@ class SearchFragment : Fragment(), View.OnClickListener {
 
     lateinit var mAuth : FirebaseAuth
     lateinit var mDB : FirebaseFirestore
+
+
+    lateinit var cuisineSpinner : Spinner
+    var cuisine : String? = null
+    lateinit var typeSpinner : Spinner
+    var type : String? = null
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -82,12 +87,34 @@ class SearchFragment : Fragment(), View.OnClickListener {
         val view = inflater.inflate(R.layout.fragment_search, container, false)
 
         recyclerView = view.findViewById(R.id.recycler_view) as RecyclerView
-        recyclerView.layoutManager = LinearLayoutManager(view.context)
+        recyclerView.layoutManager = LinearLayoutManager(context)
 
         val searchButton = view.findViewById(R.id.search_button) as Button
 
+        seachingSnackbar = Snackbar.make(getActivity()!!.findViewById(android.R.id.content),
+                "Searching", Snackbar.LENGTH_INDEFINITE)
 
-        val linearLayout = view.findViewById(R.id.search_linear_layout) as LinearLayout
+        cuisineSpinner = view.findViewById(R.id.search_cuisine)
+        typeSpinner = view.findViewById(R.id.search_type)
+
+        var cuisineAdapter : ArrayAdapter<CharSequence> =
+                ArrayAdapter.createFromResource(context,
+                        R.array.cuisine_types,
+                        android.R.layout.simple_spinner_item)
+        cuisineAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        cuisineSpinner.setAdapter(cuisineAdapter)
+        typeSpinner.setSelection(0)
+
+        var typeAdapter : ArrayAdapter<CharSequence> =
+                ArrayAdapter.createFromResource(context,
+                        R.array.meal_types,
+                        android.R.layout.simple_spinner_item)
+        typeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        typeSpinner.setAdapter(typeAdapter)
+        typeSpinner.setSelection(0)
+
+        cuisineSpinner.setOnItemSelectedListener(this)
+        typeSpinner.setOnItemSelectedListener(this)
 
         searchButton.setOnClickListener {
             searchRecipies()
@@ -110,24 +137,56 @@ class SearchFragment : Fragment(), View.OnClickListener {
 
 
     private fun searchRecipies() {
+        seachingSnackbar?.show()
         var retriever = RecipieRetriver()
-        val callback = object : Callback<List<Recipe>> {
-            override fun onFailure(call: Call<List<Recipe>>?, t: Throwable?) {
+        val callback = object : Callback<RecipeSearchResult> {
+            override fun onFailure(call: Call<RecipeSearchResult>?, t: Throwable?) {
+                Log.d(TAG, "response successful", t)
+                seachingSnackbar?.dismiss()
             }
 
-            override fun onResponse(call: Call<List<Recipe>>?, response: Response<List<Recipe>>?) {
+            override fun onResponse(call: Call<RecipeSearchResult>?, response: Response<RecipeSearchResult>?) {
                 response?.isSuccessful.let {
-                    this@SearchFragment.recipes = response?.body()
+                    Log.d(TAG, "response successful")
+                    this@SearchFragment.recipes = response?.body()?.results
                     mainAdapter = MainAdapter(this@SearchFragment.recipes!!,
                             this@SearchFragment)
                     recyclerView.adapter = mainAdapter
-                    this@SearchFragment.seachingSnackbar?.dismiss()
+
+                    seachingSnackbar?.dismiss()
                 }
             }
 
         }
 
-        retriever.getRecipes(callback, searchString)
+
+        retriever.getRecipes(callback, searchString, cuisine, type)
+    }
+
+    override fun onNothingSelected(parent: AdapterView<*>?) {
+
+    }
+
+    override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+        when(parent?.id){
+            R.id.search_type -> {
+                val item = parent?.getItemAtPosition(position).toString()
+                if(item.equals("No Preference")){
+                    cuisine = null
+                }else {
+                    cuisine = parent?.getItemAtPosition(position).toString()
+                }
+            }
+            R.id.search_cuisine -> {
+                val item = parent?.getItemAtPosition(position).toString()
+                if(item.equals("No Preference")){
+                    type = null
+                }else {
+                    type = parent?.getItemAtPosition(position).toString()
+                }
+            }
+        }
+
     }
 
     override fun onClick(view: View?) {

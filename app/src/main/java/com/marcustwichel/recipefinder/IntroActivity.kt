@@ -44,17 +44,6 @@ class IntroActivity : AppCompatActivity() {
 
     }
 
-    override fun onResume() {
-        super.onResume()
-        if(mAuth?.currentUser != null){
-            val intent = Intent(this, MainActivity::class.java)
-            startActivity(intent)
-
-        }else{
-            signIn()
-        }
-    }
-
     private fun signIn(){
 
             val providers = Arrays.asList(
