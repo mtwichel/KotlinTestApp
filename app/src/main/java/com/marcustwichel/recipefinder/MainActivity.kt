@@ -28,12 +28,13 @@ class MainActivity : AppCompatActivity(),
 
     lateinit var mAuth : FirebaseAuth
     lateinit var mDB : FirebaseFirestore
+    lateinit var toolbar : Toolbar
     val TAG : String = "MainActivity"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        val toolbar = findViewById(R.id.toolbar) as Toolbar
+        toolbar  = findViewById(R.id.toolbar) as Toolbar
         setSupportActionBar(toolbar)
 
         mAuth = FirebaseAuth.getInstance()
@@ -54,18 +55,21 @@ class MainActivity : AppCompatActivity(),
                 BottomNavigationView.OnNavigationItemSelectedListener { item ->
                     when (item.itemId) {
                         R.id.action_bottombaritem_search -> {
+                            toolbar.title = "Search"
                             getSupportFragmentManager()
                                     .beginTransaction()
                                     .replace(R.id.frag_holder, SearchFragment() as Fragment)
                                     .commit()
                         }
                         R.id.action_bottombaritem_kitchen -> {
+                            toolbar.title = "Kitchen"
                             getSupportFragmentManager()
                                     .beginTransaction()
                                     .replace(R.id.frag_holder, KitchenFragment() as Fragment)
                                     .commit()
                         }
                         R.id.action_bottombaritem_list ->{
+                            toolbar.title = "Grocery List"
                             getSupportFragmentManager()
                                     .beginTransaction()
                                     .replace(R.id.frag_holder, ListFragment() as Fragment)
@@ -94,8 +98,6 @@ class MainActivity : AppCompatActivity(),
         when(id){
             R.id.action_sign_out -> {
                 signOut()
-                val intent = Intent(this, IntroActivity::class.java)
-                startActivity(intent)
                 return true
             }
 
@@ -114,6 +116,8 @@ class MainActivity : AppCompatActivity(),
                 .addOnCompleteListener(object : OnCompleteListener<Void> {
                     override fun onComplete(task: Task<Void>) {
                         Toast.makeText(this@MainActivity, "Signed Out", Toast.LENGTH_LONG).show()
+                        val intent = Intent(this@MainActivity, IntroActivity::class.java)
+                        startActivity(intent)
                     }
                 })
     }

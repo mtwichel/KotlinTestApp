@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import com.google.android.gms.tasks.OnSuccessListener
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.EventListener
@@ -16,6 +17,11 @@ import java.io.Serializable
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
+import com.google.android.gms.tasks.Task
+import android.support.annotation.NonNull
+import com.google.android.gms.tasks.OnCompleteListener
+
+
 
 
 /**
@@ -29,14 +35,18 @@ class ListItemAdapter() :  RecyclerView.Adapter<ListItemAdapter.ListItemViewHold
     var mAuth : FirebaseAuth = FirebaseAuth.getInstance()
     var items : ArrayList<String>
     var values : ArrayList<Boolean>
+    var kitchenItems : ArrayList<String>
 
 
     var workingDocument = mDB.collection("groceryLists").document(mAuth.currentUser!!.uid)
-
+    var kitchenDocument = mDB.collection("kitchens").document(mAuth.currentUser!!.uid)
 
     init{
         items = ArrayList()
         values = ArrayList()
+        kitchenItems = ArrayList()
+
+
         if (mAuth.currentUser != null) {
             workingDocument.addSnapshotListener(EventListener() { documentSnapshot, exception ->
                 if (documentSnapshot.exists()) {
@@ -54,6 +64,14 @@ class ListItemAdapter() :  RecyclerView.Adapter<ListItemAdapter.ListItemViewHold
                         notifyItemInserted(0)
                     }
                     Log.d(TAG, "data changed")
+                }
+            })
+        }
+
+        if (mAuth.currentUser != null) {
+            kitchenDocument.addSnapshotListener(EventListener(){ documentSnapshot, exception->
+                if(documentSnapshot.exists()){
+                    kitchenItems = documentSnapshot.get("items") as ArrayList<String>
                 }
             })
         }
@@ -143,19 +161,35 @@ class ListItemAdapter() :  RecyclerView.Adapter<ListItemAdapter.ListItemViewHold
     }
 
     fun moveCheckedToKitchen() {
-        var kitchenDocument = mDB.collection("kitchens").document(mAuth.currentUser!!.uid)
-        var kitchenItems : ArrayList<String>
-        kitchenDocument.get().addOnCompleteListener(){ task ->  
-//            kitchenItems = task.getResult().data
-        }
-        for(i in 1..values.size){
+        Log.i(TAG, "Value size" + values.size)
+        for(i in 0 until values.size){
             if(values[i]){
                 //checked
-
-            }else{
-                //not checked
+                kitchenItems?.add(items[i])
             }
         }
+        var newItems = ArrayList<String>()
+        var newValues = ArrayList<Boolean>()
+        values.forEachIndexed() { index, current ->
+            if(!current){
+                newItems.add(items[index])
+                newValues.add(false)
+            }
+        }
+
+        items = newItems
+        values = newValues
+
+        var data= mutableMapOf<String, ArrayList<Any>>()
+        data["items"] = items as ArrayList<Any>
+        data["values"] = values as ArrayList<Any>
+        workingDocument.set(data as MutableMap<String, Any>)
+
+        data= mutableMapOf<String, ArrayList<Any>>()
+        data["items"] = kitchenItems as ArrayList<Any>
+        kitchenDocument.set(data as MutableMap<String, Any>)
+
+        notifyDataSetChanged()
     }
 
     inner class ListItemViewHolder(itemView : View) : RecyclerView.ViewHolder(itemView) {

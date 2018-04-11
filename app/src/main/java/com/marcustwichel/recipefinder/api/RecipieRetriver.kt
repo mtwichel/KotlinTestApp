@@ -29,8 +29,10 @@ class RecipieRetriver {
     fun getRecipes(callback: Callback<RecipeSearchResult>,
                    searchString : String,
                    cuisine : String?,
-                   type : String?) {
-        val call = service.getRecipes(searchString, cuisine, type)
+                   type : String?,
+                   queryString : String?,
+                   ranking : Int?) {
+        val call = service.getRecipes(searchString, cuisine, type, queryString, ranking)
         Log.d(TAG, call.request().url().toString())
         call.enqueue(callback)
     }

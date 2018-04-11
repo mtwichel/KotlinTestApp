@@ -56,9 +56,14 @@ class SearchFragment : Fragment(), View.OnClickListener, AdapterView.OnItemSelec
 
 
     lateinit var cuisineSpinner : Spinner
-    var cuisine : String? = null
     lateinit var typeSpinner : Spinner
+    lateinit var queryStringInput : EditText
+    lateinit var rankingSpinner : Spinner
+
+    var cuisine : String? = null
     var type : String? = null
+    var queryString : String? = null
+    var ranking : Int? = null
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -96,6 +101,8 @@ class SearchFragment : Fragment(), View.OnClickListener, AdapterView.OnItemSelec
 
         cuisineSpinner = view.findViewById(R.id.search_cuisine)
         typeSpinner = view.findViewById(R.id.search_type)
+        rankingSpinner = view.findViewById(R.id.ranking_spinner)
+        queryStringInput = view.findViewById(R.id.query_string_input) as EditText
 
         var cuisineAdapter : ArrayAdapter<CharSequence> =
                 ArrayAdapter.createFromResource(context,
@@ -112,6 +119,17 @@ class SearchFragment : Fragment(), View.OnClickListener, AdapterView.OnItemSelec
         typeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         typeSpinner.setAdapter(typeAdapter)
         typeSpinner.setSelection(0)
+
+        cuisineSpinner.setOnItemSelectedListener(this)
+        typeSpinner.setOnItemSelectedListener(this)
+
+        var rankingAdapter : ArrayAdapter<CharSequence> =
+                ArrayAdapter.createFromResource(context,
+                        R.array.ranking_options,
+                        android.R.layout.simple_spinner_item)
+        rankingAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        rankingSpinner.setAdapter(rankingAdapter)
+        rankingSpinner.setSelection(0)
 
         cuisineSpinner.setOnItemSelectedListener(this)
         typeSpinner.setOnItemSelectedListener(this)
@@ -159,8 +177,12 @@ class SearchFragment : Fragment(), View.OnClickListener, AdapterView.OnItemSelec
 
         }
 
+        queryString = queryStringInput.text.toString()
+        if(queryString.equals("")){
+            queryString = null
+        }
 
-        retriever.getRecipes(callback, searchString, cuisine, type)
+        retriever.getRecipes(callback, searchString, cuisine, type, queryString, ranking)
     }
 
     override fun onNothingSelected(parent: AdapterView<*>?) {
@@ -184,6 +206,9 @@ class SearchFragment : Fragment(), View.OnClickListener, AdapterView.OnItemSelec
                 }else {
                     type = parent?.getItemAtPosition(position).toString()
                 }
+            }
+            R.id.ranking_spinner -> {
+                ranking = position
             }
         }
 

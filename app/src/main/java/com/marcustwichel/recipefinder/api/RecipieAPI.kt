@@ -16,10 +16,12 @@ import retrofit2.http.Query
 interface RecipieAPI {
 
     @Headers("X-Mashape-Key: 7lqJ5Hl4RJmshs4bsOyrsroUiH2cp1pwFfjjsnU7UssW1DWdF3", "Accept: application/json")
-    @GET("recipes/searchComplex/?limitLicense=False&fillIngredients=False&number=10&offset=0&ranking=0&instructionsRequired=true")
+    @GET("recipes/searchComplex/?limitLicense=False&fillIngredients=False&number=10&offset=0&instructionsRequired=true")
     fun getRecipes(@Query("includeIngredients") ingredients: String,
                    @Query("type") type: String?,
-                   @Query("cuisine") cuisine : String?): Call<RecipeSearchResult>
+                   @Query("cuisine") cuisine : String?,
+                   @Query("query") queryString : String?,
+                   @Query("ranking") ranking : Int?): Call<RecipeSearchResult>
 
     @Headers("X-Mashape-Key: 7lqJ5Hl4RJmshs4bsOyrsroUiH2cp1pwFfjjsnU7UssW1DWdF3")
     @GET("recipes/{id}/analyzedInstructions?stepBreakdown=true")
