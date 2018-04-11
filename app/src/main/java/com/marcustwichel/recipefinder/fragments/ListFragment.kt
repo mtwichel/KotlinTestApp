@@ -1,14 +1,22 @@
 package com.marcustwichel.recipefinder.recipefinder.fragments
 
 import android.content.Context
-import android.net.Uri
 import android.os.Bundle
 import android.support.v4.app.Fragment
+import android.support.v7.widget.DefaultItemAnimator
+import android.support.v7.widget.DividerItemDecoration
+import android.support.v7.widget.LinearLayoutManager
+import android.support.v7.widget.RecyclerView
+import android.support.v7.widget.helper.ItemTouchHelper
+import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-
-import com.marcustwichel.recipefinder.R
+import android.view.inputmethod.EditorInfo
+import android.widget.Button
+import android.widget.EditText
+import android.widget.TextView
+import com.marcustwichel.recipefinder.*
 
 /**
  * A simple [Fragment] subclass.
@@ -18,32 +26,69 @@ import com.marcustwichel.recipefinder.R
  * Use the [ListFragment.newInstance] factory method to
  * create an instance of this fragment.
  */
-class ListFragment : Fragment() {
+class ListFragment : Fragment(), RecyclerListItemTouchHelper.RecyclerItemTouchHelperListener {
 
-    // TODO: Rename and change types of parameters
-
+    private val TAG: String = "ListFragment"
 
     private var mListener: OnFragmentInteractionListener? = null
+    lateinit var recyclerView : RecyclerView
+    lateinit var mItemAdapter : ListItemAdapter
+    private lateinit var itemInput : EditText
+    lateinit var moveButton : Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (arguments != null) {
 
-        }
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_list, container, false)
+        var view = inflater.inflate(R.layout.fragment_list, container, false)
+
+//        mRelativeLayout = view.findViewById(R.id.kitchen_frag_relative_layout) as RelativeLayout
+
+        recyclerView = view.findViewById(R.id.list_items) as RecyclerView
+        mItemAdapter = ListItemAdapter()
+        recyclerView.layoutManager = LinearLayoutManager(recyclerView.context) as RecyclerView.LayoutManager
+        recyclerView.itemAnimator = DefaultItemAnimator()
+        recyclerView.addItemDecoration(DividerItemDecoration(recyclerView.context, DividerItemDecoration.VERTICAL))
+        recyclerView.adapter = mItemAdapter
+
+        val itemTouchHelperCallbackUnchecked = RecyclerListItemTouchHelper(0, ItemTouchHelper.LEFT, this)
+        ItemTouchHelper(itemTouchHelperCallbackUnchecked).attachToRecyclerView(recyclerView)
+
+
+        itemInput = view.findViewById(R.id.add_list_item) as EditText
+
+        itemInput.setOnEditorActionListener(object : TextView.OnEditorActionListener {
+            override fun onEditorAction(view: TextView?, actionId: Int, keyEvent: KeyEvent?): Boolean {
+                var handled : Boolean = false;
+                if (actionId == EditorInfo.IME_ACTION_DONE) {
+                    addItem(itemInput.text.toString())
+                    itemInput.setText("")
+                    itemInput.clearFocus()
+                    handled = true;
+                }
+                return handled;
+            }
+        })
+
+        moveButton = view.findViewById(R.id.move_to_kitchen_button) as Button
+        moveButton.setOnClickListener(View.OnClickListener {  view ->
+            mItemAdapter.moveCheckedToKitchen()
+        })
+
+        return view
     }
 
-    // TODO: Rename method, update argument and hook method into UI event
-    fun onButtonPressed(uri: Uri) {
-        if (mListener != null) {
-
-        }
+    private fun addItem(item: String) {
+        mItemAdapter.addItem(item)
+        recyclerView.scrollToPosition(0)
     }
+
+
+
+
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -59,41 +104,16 @@ class ListFragment : Fragment() {
         mListener = null
     }
 
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     *
-     *
-     * See the Android Training lesson [Communicating with Other Fragments](http://developer.android.com/training/basics/fragments/communicating.html) for more information.
-     */
+    override fun onSwiped(viewHolder: RecyclerView.ViewHolder?, direction: Int, position: Int?) {
+        if (viewHolder is ListItemAdapter.ListItemViewHolder) {
+//            val name = itemAdapter.getItemName(viewHolder.getAdapterPosition())
+            mItemAdapter.removeItem(viewHolder.getAdapterPosition())
+        }
+    }
+
+
     interface OnFragmentInteractionListener {
 
     }
 
-    companion object {
-        // TODO: Rename parameter arguments, choose names that match
-        // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-        private val ARG_PARAM1 = "param1"
-        private val ARG_PARAM2 = "param2"
-
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment ListFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        fun newInstance(param1: String, param2: String): ListFragment {
-            val fragment = ListFragment()
-            val args = Bundle()
-            args.putString(ARG_PARAM1, param1)
-            args.putString(ARG_PARAM2, param2)
-            fragment.arguments = args
-            return fragment
-        }
-    }
-}// Required empty public constructor
+}

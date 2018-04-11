@@ -12,11 +12,10 @@
         android:orientation="vertical">
 
         <TextView
-            android:id="@+id/textView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Cuisine Type:"
-            android:layout_margin="5dp"/>
+            android:layout_margin="5dp"
+            android:text="Meal Type:" />
 
         <Spinner
             android:id="@+id/search_type"
@@ -25,10 +24,11 @@
             android:layout_margin="5dp" />
 
         <TextView
+            android:id="@+id/textView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Meal Type:"
-            android:layout_margin="5dp"/>
+            android:layout_margin="5dp"
+            android:text="Cuisine Type:" />
 
         <Spinner
             android:id="@+id/search_cuisine"

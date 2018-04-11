@@ -7,7 +7,7 @@ import android.support.v7.widget.helper.ItemTouchHelper
 /**
  * Created by marcus.twichel on 4/6/18.
  */
-class RecyclerItemTouchHelper(dragDirs : Int, swipeDirs : Int, listener: RecyclerItemTouchHelperListener)
+class RecyclerKitchenItemTouchHelper(dragDirs : Int, swipeDirs : Int, listener: RecyclerItemTouchHelperListener)
         : ItemTouchHelper.SimpleCallback(dragDirs, swipeDirs) {
 
 

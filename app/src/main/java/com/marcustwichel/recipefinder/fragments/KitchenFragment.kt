@@ -1,7 +1,6 @@
 package com.marcustwichel.recipefinder.recipefinder.fragments
 
 import android.content.Context
-import android.net.Uri
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v7.widget.DefaultItemAnimator
@@ -12,23 +11,17 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 
-import com.marcustwichel.recipefinder.RecyclerItemTouchHelper
+import com.marcustwichel.recipefinder.RecyclerKitchenItemTouchHelper
 import com.marcustwichel.recipefinder.KitchenItemAdapter
 import android.support.v7.widget.helper.ItemTouchHelper
 import android.support.design.widget.Snackbar
 import android.graphics.Color
-import android.util.Log
 import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
-import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.RelativeLayout
 import android.widget.TextView
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.EventListener
-import com.google.firebase.firestore.FirebaseFirestore
 import com.marcustwichel.recipefinder.R
-import com.marcustwichel.recipefinder.model.KitchenItemList
 
 
 /**
@@ -39,7 +32,7 @@ import com.marcustwichel.recipefinder.model.KitchenItemList
  * Use the [KitchenFragment.newInstance] factory method to
  * create an instance of this fragment.
  */
-class KitchenFragment : Fragment(), RecyclerItemTouchHelper.RecyclerItemTouchHelperListener {
+class KitchenFragment : Fragment(), RecyclerKitchenItemTouchHelper.RecyclerItemTouchHelperListener {
 
     lateinit var recyclerView : RecyclerView
     lateinit var mItemAdapter : KitchenItemAdapter
@@ -69,10 +62,10 @@ class KitchenFragment : Fragment(), RecyclerItemTouchHelper.RecyclerItemTouchHel
         recyclerView.addItemDecoration(DividerItemDecoration(recyclerView.context, DividerItemDecoration.VERTICAL))
         recyclerView.adapter = mItemAdapter
 
-        val itemTouchHelperCallback = RecyclerItemTouchHelper(0, ItemTouchHelper.LEFT, this)
+        val itemTouchHelperCallback = RecyclerKitchenItemTouchHelper(0, ItemTouchHelper.LEFT, this)
         ItemTouchHelper(itemTouchHelperCallback).attachToRecyclerView(recyclerView)
 
-        itemInput = view.findViewById(R.id.add_item) as EditText
+        itemInput = view.findViewById(R.id.add_kitchen_item) as EditText
 
         itemInput.setOnEditorActionListener(object : TextView.OnEditorActionListener {
             override fun onEditorAction(view: TextView?, actionId: Int, keyEvent: KeyEvent?): Boolean {
@@ -93,24 +86,8 @@ class KitchenFragment : Fragment(), RecyclerItemTouchHelper.RecyclerItemTouchHel
     private fun addItem(item: String) {
         mItemAdapter.addItem(item)
         recyclerView.scrollToPosition(0)
-//        hideKeyboard()
-
     }
 
-    private fun hideKeyboard() {
-        val view = activity?.currentFocus
-        if (view != null) {
-            val imm = context?.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-            imm.hideSoftInputFromWindow(view.windowToken, 0)
-        }
-    }
-
-    // TODO: Rename method, update argument and hook method into UI event
-    fun onButtonPressed(uri: Uri) {
-        if (mListener != null) {
-//            mListener!!.onFragmentInteraction(uri)
-        }
-    }
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -134,7 +111,6 @@ class KitchenFragment : Fragment(), RecyclerItemTouchHelper.RecyclerItemTouchHel
             // get the removed item name to display it in snack bar
             val name = mItemAdapter.getItemName(viewHolder.getAdapterPosition())
 
-            // backup of removed item for undo purpose
 
 
             // remove the item from recycler view
@@ -152,42 +128,9 @@ class KitchenFragment : Fragment(), RecyclerItemTouchHelper.RecyclerItemTouchHel
             snackbar.show() }
     }
 
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     *
-     *
-     * See the Android Training lesson [Communicating with Other Fragments](http://developer.android.com/training/basics/fragments/communicating.html) for more information.
-     */
     interface OnFragmentInteractionListener {
         // TODO: Update argument type and name
 //        fun onFragmentInteraction(uri: Uri)
     }
 
-    companion object {
-        // TODO: Rename parameter arguments, choose names that match
-        // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-        private val ARG_PARAM1 = "param1"
-        private val ARG_PARAM2 = "param2"
-
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment KitchenFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        fun newInstance(param1: String, param2: String): KitchenFragment {
-            val fragment = KitchenFragment()
-            val args = Bundle()
-            args.putString(ARG_PARAM1, param1)
-            args.putString(ARG_PARAM2, param2)
-            fragment.arguments = args
-            return fragment
-        }
-    }
 }// Required empty public constructor
