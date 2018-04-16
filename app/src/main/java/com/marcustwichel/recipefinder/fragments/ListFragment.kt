@@ -48,7 +48,7 @@ class ListFragment : Fragment(), RecyclerListItemTouchHelper.RecyclerItemTouchHe
 //        mRelativeLayout = view.findViewById(R.id.kitchen_frag_relative_layout) as RelativeLayout
 
         recyclerView = view.findViewById(R.id.list_items) as RecyclerView
-        mItemAdapter = ListItemAdapter()
+        mItemAdapter = ListItemAdapter(recyclerView)
         recyclerView.layoutManager = LinearLayoutManager(recyclerView.context) as RecyclerView.LayoutManager
         recyclerView.itemAnimator = DefaultItemAnimator()
         recyclerView.addItemDecoration(DividerItemDecoration(recyclerView.context, DividerItemDecoration.VERTICAL))
@@ -83,7 +83,6 @@ class ListFragment : Fragment(), RecyclerListItemTouchHelper.RecyclerItemTouchHe
 
     private fun addItem(item: String) {
         mItemAdapter.addItem(item)
-        recyclerView.scrollToPosition(0)
     }
 
 

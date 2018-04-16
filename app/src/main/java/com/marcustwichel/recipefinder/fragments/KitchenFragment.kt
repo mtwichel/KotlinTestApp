@@ -21,6 +21,7 @@ import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.RelativeLayout
 import android.widget.TextView
+import android.widget.Toast
 import com.marcustwichel.recipefinder.R
 
 
@@ -71,9 +72,11 @@ class KitchenFragment : Fragment(), RecyclerKitchenItemTouchHelper.RecyclerItemT
             override fun onEditorAction(view: TextView?, actionId: Int, keyEvent: KeyEvent?): Boolean {
                 var handled : Boolean = false;
                 if (actionId == EditorInfo.IME_ACTION_DONE) {
-                    addItem(itemInput.text.toString())
-                    itemInput.setText("")
-                    itemInput.clearFocus()
+                    if(!itemInput.text.toString().equals("")) {
+                        addItem(itemInput.text.toString())
+                        itemInput.setText("")
+                        itemInput.clearFocus()
+                    }
                 handled = true;
         }
         return handled;

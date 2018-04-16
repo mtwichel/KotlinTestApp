@@ -27,7 +27,8 @@ import com.google.android.gms.tasks.OnCompleteListener
 /**
  * Created by mtwichel on 4/11/18.
  */
-class ListItemAdapter() :  RecyclerView.Adapter<ListItemAdapter.ListItemViewHolder>(), Serializable {
+class ListItemAdapter(val recyclerView: RecyclerView) :  RecyclerView.Adapter<ListItemAdapter.ListItemViewHolder>(), Serializable {
+
 
     val TAG = "ListItemAdapter"
 
@@ -35,7 +36,11 @@ class ListItemAdapter() :  RecyclerView.Adapter<ListItemAdapter.ListItemViewHold
     var mAuth : FirebaseAuth = FirebaseAuth.getInstance()
     var items : ArrayList<String>
     var values : ArrayList<Boolean>
+    var nItems : ArrayList<String>
+    var nValues : ArrayList<Boolean>
     var kitchenItems : ArrayList<String>
+    var oldSize : Int? = null
+    var deletedPos : Int? = null
 
 
     var workingDocument = mDB.collection("groceryLists").document(mAuth.currentUser!!.uid)
@@ -44,6 +49,8 @@ class ListItemAdapter() :  RecyclerView.Adapter<ListItemAdapter.ListItemViewHold
     init{
         items = ArrayList()
         values = ArrayList()
+        nValues = ArrayList()
+        nItems = ArrayList()
         kitchenItems = ArrayList()
 
 
@@ -52,20 +59,25 @@ class ListItemAdapter() :  RecyclerView.Adapter<ListItemAdapter.ListItemViewHold
 
                 if(mAuth.currentUser!= null){
                     if (documentSnapshot != null && documentSnapshot.exists()) {
-                        var oldSize = items.size
                         items = documentSnapshot.get("items") as ArrayList<String>
                         values = documentSnapshot.get("values") as ArrayList<Boolean>
-
-                        if (oldSize == 0) {
+                        if(oldSize == null){
                             notifyDataSetChanged()
-                        } else if (oldSize > items.size) {
-                            //itemRemoved
-                            notifyDataSetChanged()
-                        } else if (oldSize < items.size) {
-                            //item added
+                        }else if(oldSize == items.size -1){ //item added
                             notifyItemInserted(0)
+                            recyclerView.scrollToPosition(0)
+                        }else if(oldSize == items.size+1){  //item removed
+                            if(deletedPos != null){
+                                notifyItemRemoved(deletedPos!!)
+                            }else{
+                                notifyDataSetChanged()
+                            }
+
+                        }else{
+                            notifyDataSetChanged()
                         }
-                        Log.d(TAG, "data changed")
+
+                        Log.d(TAG, "data changed " + oldSize + " : " + items.size)
                     }
                 }
             })
@@ -73,7 +85,7 @@ class ListItemAdapter() :  RecyclerView.Adapter<ListItemAdapter.ListItemViewHold
 
         if (mAuth.currentUser != null) {
             kitchenDocument.addSnapshotListener(EventListener(){ documentSnapshot, exception->
-                if(documentSnapshot.exists()){
+                if(documentSnapshot != null && documentSnapshot.exists()){
                     kitchenItems = documentSnapshot.get("items") as ArrayList<String>
                 }
             })
@@ -92,60 +104,62 @@ class ListItemAdapter() :  RecyclerView.Adapter<ListItemAdapter.ListItemViewHold
     override fun onBindViewHolder(holder: ListItemViewHolder, position: Int) {
         val checkbox = holder.checkbox
         holder?.checkbox?.text = items[position]
+        Log.i(TAG, "" + values[position] + " | " + position)
         if(values[position]){
             checkbox?.setPaintFlags(checkbox?.getPaintFlags() or Paint.STRIKE_THRU_TEXT_FLAG);
             checkbox?.setChecked(true)
+        }else{
+            checkbox?.setPaintFlags(0)
+            checkbox?.setChecked(false)
         }
-        holder.checkbox?.setOnCheckedChangeListener(CompoundButton.OnCheckedChangeListener(){
-            buttonView, isChecked ->
-            if(isChecked){
-                checkbox?.setPaintFlags(checkbox?.getPaintFlags() or Paint.STRIKE_THRU_TEXT_FLAG);
+        holder.checkbox?.setOnClickListener(View.OnClickListener { v: View? ->
+            if(checkbox!!.isChecked){
                 checkItem(holder.adapterPosition)
             }else{
                 uncheckItem(holder.adapterPosition)
-                checkbox?.setPaintFlags(0)
             }
-
         })
-
     }
 
 
 
     fun removeItem(position: Int) {
-        items.removeAt(position)
-        values.removeAt(position)
-        var data= mutableMapOf<String, ArrayList<Any>>()
-        data["items"] = items as ArrayList<Any>
-        data["values"] = values as ArrayList<Any>
+        saveOldVariables()
+        deletedPos = position
+        nItems.removeAt(position)
+        nValues.removeAt(position)
+        var data = mutableMapOf<String, ArrayList<Any>>()
+        data["items"] = nItems as ArrayList<Any>
+        data["values"] = nValues as ArrayList<Any>
         workingDocument.set(data as MutableMap<String, Any>)
-        notifyItemRemoved(position)
     }
 
 
     fun addItem(item: String) {
-        items.add(0, toTitleCase(item))
-        values.add(0, false)
+        saveOldVariables()
+        nItems.add(0, toTitleCase(item))
+        nValues.add(0, false)
         var data= mutableMapOf<String, ArrayList<Any>>()
-        data["items"] = items as ArrayList<Any>
-        data["values"] = values as ArrayList<Any>
+        data["items"] = nItems as ArrayList<Any>
+        data["values"] = nValues as ArrayList<Any>
         workingDocument.set(data as MutableMap<String, Any>)
-        notifyItemInserted(0)
     }
 
     fun checkItem(position: Int){
-        values[position] = true
+        saveOldVariables()
+        nValues[position] = true
         var data= mutableMapOf<String, ArrayList<Any>>()
-        data["items"] = items as ArrayList<Any>
-        data["values"] = values as ArrayList<Any>
+        data["items"] = nItems as ArrayList<Any>
+        data["values"] = nValues as ArrayList<Any>
         workingDocument.set(data as MutableMap<String, Any>)
     }
 
     private fun uncheckItem(position: Int) {
-        values[position] = false
+        saveOldVariables()
+        nValues[position] = false
         var data= mutableMapOf<String, ArrayList<Any>>()
-        data["items"] = items as ArrayList<Any>
-        data["values"] = values as ArrayList<Any>
+        data["items"] = nItems as ArrayList<Any>
+        data["values"] = nValues as ArrayList<Any>
         workingDocument.set(data as MutableMap<String, Any>)
     }
 
@@ -159,9 +173,13 @@ class ListItemAdapter() :  RecyclerView.Adapter<ListItemAdapter.ListItemViewHold
         }
     }
 
-    fun getItemName(adapterPosition: Int): String {
-        return items.get(adapterPosition)
+    private fun saveOldVariables() {
+        oldSize = items.size
+        nItems = ArrayList(items)
+        nValues = ArrayList(values)
     }
+
+
 
     fun moveCheckedToKitchen() {
         Log.i(TAG, "Value size" + values.size)
@@ -211,3 +229,4 @@ class ListItemAdapter() :  RecyclerView.Adapter<ListItemAdapter.ListItemViewHold
 
 
 }
+

@@ -42,13 +42,6 @@ class MainActivity : AppCompatActivity(),
 
 
 
-
-        //set first screen to search
-        getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.frag_holder, SearchFragment() as Fragment)
-                .commit()
-
         val bottomNavigationView = findViewById(R.id.bottom_nav) as BottomNavigationView
 
         bottomNavigationView.setOnNavigationItemSelectedListener(
@@ -80,6 +73,13 @@ class MainActivity : AppCompatActivity(),
                     }
                     true
                 })
+        //set first screen to search
+        toolbar.setTitle("Search")
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.frag_holder, SearchFragment() as Fragment)
+                .commit()
+
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -99,6 +99,9 @@ class MainActivity : AppCompatActivity(),
             R.id.action_sign_out -> {
                 signOut()
                 return true
+            }
+            R.id.action_settings -> {
+                Toast.makeText(this, "Settings not implemented yet", Toast.LENGTH_LONG).show()
             }
 
         }
