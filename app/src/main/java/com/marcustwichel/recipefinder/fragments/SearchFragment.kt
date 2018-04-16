@@ -49,7 +49,7 @@ class SearchFragment : Fragment(), View.OnClickListener, AdapterView.OnItemSelec
     var mainAdapter : MainAdapter? = null
     lateinit var recyclerView: RecyclerView
     var seachingSnackbar : Snackbar? = null
-    lateinit var searchString : String
+    var searchString : String? = null
 
     lateinit var mAuth : FirebaseAuth
     lateinit var mDB : FirebaseFirestore
@@ -77,7 +77,7 @@ class SearchFragment : Fragment(), View.OnClickListener, AdapterView.OnItemSelec
         if (mAuth.currentUser != null) {
             mDB.collection("kitchens").document(mAuth.currentUser!!.uid).addSnapshotListener(
                     EventListener() { documentSnapshot, exception ->
-                        if (documentSnapshot.exists()) {
+                        if (documentSnapshot != null && documentSnapshot.exists()) {
                             items = documentSnapshot.get("items") as ArrayList<String>
                             searchString = list2String(items)
                         }
@@ -141,7 +141,10 @@ class SearchFragment : Fragment(), View.OnClickListener, AdapterView.OnItemSelec
         return view
     }
 
-    private fun list2String(list: ArrayList<String>) : String{
+    private fun list2String(list: ArrayList<String>) : String?{
+        if(list.size == 0){
+            return null
+        }
         var ans : String = ""
         list.forEach { string ->
             ans += string + ","
@@ -155,7 +158,6 @@ class SearchFragment : Fragment(), View.OnClickListener, AdapterView.OnItemSelec
 
 
     private fun searchRecipies() {
-        seachingSnackbar?.show()
         var retriever = RecipieRetriver()
         val callback = object : Callback<RecipeSearchResult> {
             override fun onFailure(call: Call<RecipeSearchResult>?, t: Throwable?) {
@@ -182,7 +184,12 @@ class SearchFragment : Fragment(), View.OnClickListener, AdapterView.OnItemSelec
             queryString = null
         }
 
-        retriever.getRecipes(callback, searchString, cuisine, type, queryString, ranking)
+        if(searchString == null){
+            Toast.makeText(context, "You must add items in your kitchen before searching", Toast.LENGTH_LONG).show()
+        }else{
+            retriever.getRecipes(callback, searchString, cuisine, type, queryString, ranking)
+            seachingSnackbar?.show()
+        }
     }
 
     override fun onNothingSelected(parent: AdapterView<*>?) {

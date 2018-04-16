@@ -7,4 +7,9 @@
     <string name="title_activity_intro">Recipe Finder</string>
     <string name="dummy_button">Dummy Button</string>
     <string name="dummy_content">DUMMY\nCONTENT</string>
+
+    <!-- Facebook application ID and custom URL scheme (app ID prefixed by 'fb'). -->
+    <string name="facebook_application_id" translatable="false">239307726628891</string>
+    <string name="facebook_login_protocol_scheme" translatable="false">fb239307726628891
+</string>
 </resources>

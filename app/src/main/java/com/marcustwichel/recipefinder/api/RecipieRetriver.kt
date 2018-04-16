@@ -27,7 +27,7 @@ class RecipieRetriver {
     }
 
     fun getRecipes(callback: Callback<RecipeSearchResult>,
-                   searchString : String,
+                   searchString : String?,
                    cuisine : String?,
                    type : String?,
                    queryString : String?,

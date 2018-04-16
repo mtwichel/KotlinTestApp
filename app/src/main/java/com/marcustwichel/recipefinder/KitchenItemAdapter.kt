@@ -31,19 +31,21 @@ class KitchenItemAdapter() : RecyclerView.Adapter<KitchenItemAdapter.KitchenItem
         items = ArrayList()
         if (mAuth.currentUser != null) {
             workingDocument.addSnapshotListener(EventListener() { documentSnapshot, exception ->
-                if (documentSnapshot.exists()) {
-                    var oldSize = items.size
-                    items = documentSnapshot.get("items") as ArrayList<String>
-                    if (oldSize == 0) {
-                        notifyDataSetChanged()
-                    } else if (oldSize > items.size) {
-                        //itemRemoved
-                        notifyDataSetChanged()
-                    } else if (oldSize < items.size) {
-                        //item added
-                        notifyItemInserted(0)
+                if(mAuth.currentUser!=null){
+                    if (documentSnapshot != null && documentSnapshot.exists()) {
+                        var oldSize = items.size
+                        items = documentSnapshot.get("items") as ArrayList<String>
+                        if (oldSize == 0) {
+                            notifyDataSetChanged()
+                        } else if (oldSize > items.size) {
+                            //itemRemoved
+                            notifyDataSetChanged()
+                        } else if (oldSize < items.size) {
+                            //item added
+                            notifyItemInserted(0)
+                        }
+                        Log.d(TAG, "data changed")
                     }
-                    Log.d(TAG, "data changed")
                 }
             })
         }
