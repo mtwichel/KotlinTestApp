@@ -20,13 +20,12 @@ import kotlin.collections.HashMap
 import com.google.android.gms.tasks.Task
 import android.support.annotation.NonNull
 import com.google.android.gms.tasks.OnCompleteListener
+import com.google.firebase.firestore.QueryDocumentSnapshot
+import com.marcustwichel.recipefinder.model.ListItem
 
 
 
 
-/**
- * Created by mtwichel on 4/11/18.
- */
 class ListItemAdapter(val recyclerView: RecyclerView) :  RecyclerView.Adapter<ListItemAdapter.ListItemViewHolder>(), Serializable {
 
 
@@ -34,13 +33,9 @@ class ListItemAdapter(val recyclerView: RecyclerView) :  RecyclerView.Adapter<Li
 
     var mDB : FirebaseFirestore = FirebaseFirestore.getInstance()
     var mAuth : FirebaseAuth = FirebaseAuth.getInstance()
-    var items : ArrayList<String>
-    var values : ArrayList<Boolean>
-    var nItems : ArrayList<String>
-    var nValues : ArrayList<Boolean>
+    var items : ArrayList<ListItem?>
     var kitchenItems : ArrayList<String>
-    var oldSize : Int? = null
-    var deletedPos : Int? = null
+
 
 
     var workingDocument = mDB.collection("groceryLists").document(mAuth.currentUser!!.uid)
@@ -48,9 +43,6 @@ class ListItemAdapter(val recyclerView: RecyclerView) :  RecyclerView.Adapter<Li
 
     init{
         items = ArrayList()
-        values = ArrayList()
-        nValues = ArrayList()
-        nItems = ArrayList()
         kitchenItems = ArrayList()
 
 
@@ -59,25 +51,16 @@ class ListItemAdapter(val recyclerView: RecyclerView) :  RecyclerView.Adapter<Li
 
                 if(mAuth.currentUser!= null){
                     if (documentSnapshot != null && documentSnapshot.exists()) {
-                        items = documentSnapshot.get("items") as ArrayList<String>
-                        values = documentSnapshot.get("values") as ArrayList<Boolean>
-                        if(oldSize == null){
-                            notifyDataSetChanged()
-                        }else if(oldSize == items.size -1){ //item added
-                            notifyItemInserted(0)
-                            recyclerView.scrollToPosition(0)
-                        }else if(oldSize == items.size+1){  //item removed
-                            if(deletedPos != null){
-                                notifyItemRemoved(deletedPos!!)
-                            }else{
+                        workingDocument.collection("items").get().addOnCompleteListener { task ->
+                            if (task.isSuccessful) {
+                                for(document in task.result.documents){
+                                    items.add(document.toObject(ListItem::class.java))
+                                }
                                 notifyDataSetChanged()
+                            } else {
+                                Log.d(TAG, "Error getting documents: ", task.exception)
                             }
-
-                        }else{
-                            notifyDataSetChanged()
                         }
-
-                        Log.d(TAG, "data changed " + oldSize + " : " + items.size)
                     }
                 }
             })
@@ -103,64 +86,38 @@ class ListItemAdapter(val recyclerView: RecyclerView) :  RecyclerView.Adapter<Li
 
     override fun onBindViewHolder(holder: ListItemViewHolder, position: Int) {
         val checkbox = holder.checkbox
-        holder?.checkbox?.text = items[position]
-        Log.i(TAG, "" + values[position] + " | " + position)
-        if(values[position]){
-            checkbox?.setPaintFlags(checkbox?.getPaintFlags() or Paint.STRIKE_THRU_TEXT_FLAG);
-            checkbox?.setChecked(true)
-        }else{
-            checkbox?.setPaintFlags(0)
-            checkbox?.setChecked(false)
-        }
-        holder.checkbox?.setOnClickListener(View.OnClickListener { v: View? ->
-            if(checkbox!!.isChecked){
-                checkItem(holder.adapterPosition)
-            }else{
-                uncheckItem(holder.adapterPosition)
-            }
-        })
+        holder?.checkbox?.text = items[position]?.string
+        checkbox?.isChecked = items[position]!!.checked
     }
 
 
 
     fun removeItem(position: Int) {
-        saveOldVariables()
-        deletedPos = position
-        nItems.removeAt(position)
-        nValues.removeAt(position)
-        var data = mutableMapOf<String, ArrayList<Any>>()
-        data["items"] = nItems as ArrayList<Any>
-        data["values"] = nValues as ArrayList<Any>
-        workingDocument.set(data as MutableMap<String, Any>)
+        workingDocument.collection("items").document(items[position]?.id.toString()).delete()
     }
 
 
     fun addItem(item: String) {
-        saveOldVariables()
-        nItems.add(0, toTitleCase(item))
-        nValues.add(0, false)
-        var data= mutableMapOf<String, ArrayList<Any>>()
-        data["items"] = nItems as ArrayList<Any>
-        data["values"] = nValues as ArrayList<Any>
-        workingDocument.set(data as MutableMap<String, Any>)
+        var map = HashMap<String, Any>()
+        var currentId : Int = -1
+        workingDocument.get().addOnSuccessListener { task ->
+            currentId = task.data?.get("id") as Int
+        }
+        map.put("id", currentId)
+        map.put("string", item)
+        map.put("checked", false)
+
+
+
+
     }
 
     fun checkItem(position: Int){
-        saveOldVariables()
-        nValues[position] = true
-        var data= mutableMapOf<String, ArrayList<Any>>()
-        data["items"] = nItems as ArrayList<Any>
-        data["values"] = nValues as ArrayList<Any>
-        workingDocument.set(data as MutableMap<String, Any>)
+
     }
 
     private fun uncheckItem(position: Int) {
-        saveOldVariables()
-        nValues[position] = false
-        var data= mutableMapOf<String, ArrayList<Any>>()
-        data["items"] = nItems as ArrayList<Any>
-        data["values"] = nValues as ArrayList<Any>
-        workingDocument.set(data as MutableMap<String, Any>)
+
     }
 
 
@@ -173,11 +130,7 @@ class ListItemAdapter(val recyclerView: RecyclerView) :  RecyclerView.Adapter<Li
         }
     }
 
-    private fun saveOldVariables() {
-        oldSize = items.size
-        nItems = ArrayList(items)
-        nValues = ArrayList(values)
-    }
+
 
 
 
