@@ -92,7 +92,11 @@ class SearchFragment : Fragment(), View.OnClickListener, AdapterView.OnItemSelec
         val view = inflater.inflate(R.layout.fragment_search, container, false)
 
         recyclerView = view.findViewById(R.id.recycler_view) as RecyclerView
-        recyclerView.layoutManager = LinearLayoutManager(context)
+        recyclerView.layoutManager = object : LinearLayoutManager(context) {
+            override fun canScrollVertically(): Boolean {
+                return false
+            }
+        }
 
         val searchButton = view.findViewById(R.id.search_button) as Button
 
