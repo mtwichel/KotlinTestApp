@@ -32,7 +32,7 @@
             android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.marcustwichel.recipefinder.MainActivity" />
+                android:value="com.marcustwichel.recipefinder.RecipeResultsActivity" />
         </activity>
         <activity
             android:name=".RecipeResultsActivity"

@@ -12,7 +12,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 /**
  * Created by marcus.twichel on 3/14/18.
  */
-class RecipieRetriver {
+class RecipeRetriver {
 
     val TAG = "RecipeRetriver"
 

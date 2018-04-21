@@ -35,6 +35,7 @@ class MainAdapter(var recipes: List<Recipe>,
                     .load(recipie.image)
                     .into(holder?.recipe_photo)
         }
+        holder.recipe_photo.transitionName = (recipie.id.toString())
         holder?.usedMissing?.text =
                 "Used: " +
                 recipie.usedIngredientCount.toString() +

@@ -1,33 +1,21 @@
 package com.marcustwichel.recipefinder.recipefinder.fragments
 
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.support.v4.app.Fragment
-import android.content.Intent
-import android.support.design.widget.Snackbar
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
+import android.support.v7.app.AppCompatActivity
 import android.util.Log
-import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.inputmethod.EditorInfo
-import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.EventListener
 import com.google.firebase.firestore.FirebaseFirestore
-import com.marcustwichel.recipefinder.DetailActivity
-import com.marcustwichel.recipefinder.MainAdapter
 
 import com.marcustwichel.recipefinder.R
-import com.marcustwichel.recipefinder.model.RecipeSearchResult
-import com.marcustwichel.recipefinder.recipefinder.api.RecipieRetriver
-import com.marcustwichel.recipefinder.recipefinder.model.Recipe
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import com.marcustwichel.recipefinder.RecipeResultsActivity
 
 /**
  * A simple [Fragment] subclass.
@@ -37,19 +25,14 @@ import retrofit2.Response
  * Use the [SearchFragment.newInstance] factory method to
  * create an instance of this fragment.
  */
-class SearchFragment : Fragment(), View.OnClickListener, AdapterView.OnItemSelectedListener {
+class SearchFragment : Fragment(), AdapterView.OnItemSelectedListener{
 
 
-    val TAG: String? = "SearchFragment"
+    val TAG: String = "SearchFragment"
 
 
 
     private var mListener: OnFragmentInteractionListener? = null
-    var recipes : List<Recipe>? = null
-    var mainAdapter : MainAdapter? = null
-    lateinit var recyclerView: RecyclerView
-    var seachingSnackbar : Snackbar? = null
-    var searchString : String? = null
 
     lateinit var mAuth : FirebaseAuth
     lateinit var mDB : FirebaseFirestore
@@ -64,6 +47,8 @@ class SearchFragment : Fragment(), View.OnClickListener, AdapterView.OnItemSelec
     var type : String? = null
     var queryString : String? = null
     var ranking : Int? = null
+    var searchString : String? = null
+
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -91,17 +76,8 @@ class SearchFragment : Fragment(), View.OnClickListener, AdapterView.OnItemSelec
 
         val view = inflater.inflate(R.layout.fragment_search, container, false)
 
-        recyclerView = view.findViewById(R.id.recycler_view) as RecyclerView
-        recyclerView.layoutManager = object : LinearLayoutManager(context) {
-            override fun canScrollVertically(): Boolean {
-                return false
-            }
-        }
-
         val searchButton = view.findViewById(R.id.search_button) as Button
 
-        seachingSnackbar = Snackbar.make(getActivity()!!.findViewById(android.R.id.content),
-                "Searching", Snackbar.LENGTH_INDEFINITE)
 
         cuisineSpinner = view.findViewById(R.id.search_cuisine)
         typeSpinner = view.findViewById(R.id.search_type)
@@ -139,11 +115,27 @@ class SearchFragment : Fragment(), View.OnClickListener, AdapterView.OnItemSelec
         typeSpinner.setOnItemSelectedListener(this)
 
         searchButton.setOnClickListener {
-            searchRecipies()
+            queryString = queryStringInput.text.toString()
+            if(queryString.equals("")){
+                queryString = null
+            }
+
+            if(searchString == null){
+                Toast.makeText(context, "You must add items in your kitchen before searching", Toast.LENGTH_LONG).show()
+            }else{
+                var intent = Intent(context, RecipeResultsActivity::class.java)
+                intent.putExtra("searchString", searchString)
+                intent.putExtra("cuisine", cuisine)
+                intent.putExtra("type", type)
+                intent.putExtra("queryString", queryString)
+                intent.putExtra("ranking", ranking)
+                startActivity(intent)
+            }
         }
 
         return view
     }
+
 
     private fun list2String(list: ArrayList<String>) : String?{
         if(list.size == 0){
@@ -161,40 +153,6 @@ class SearchFragment : Fragment(), View.OnClickListener, AdapterView.OnItemSelec
     }
 
 
-    private fun searchRecipies() {
-        var retriever = RecipieRetriver()
-        val callback = object : Callback<RecipeSearchResult> {
-            override fun onFailure(call: Call<RecipeSearchResult>?, t: Throwable?) {
-                Log.d(TAG, "response successful", t)
-                seachingSnackbar?.dismiss()
-            }
-
-            override fun onResponse(call: Call<RecipeSearchResult>?, response: Response<RecipeSearchResult>?) {
-                response?.isSuccessful.let {
-                    Log.d(TAG, "response successful")
-                    this@SearchFragment.recipes = response?.body()?.results
-                    mainAdapter = MainAdapter(this@SearchFragment.recipes!!,
-                            this@SearchFragment)
-                    recyclerView.adapter = mainAdapter
-
-                    seachingSnackbar?.dismiss()
-                }
-            }
-
-        }
-
-        queryString = queryStringInput.text.toString()
-        if(queryString.equals("")){
-            queryString = null
-        }
-
-        if(searchString == null){
-            Toast.makeText(context, "You must add items in your kitchen before searching", Toast.LENGTH_LONG).show()
-        }else{
-            retriever.getRecipes(callback, searchString, cuisine, type, queryString, ranking)
-            seachingSnackbar?.show()
-        }
-    }
 
     override fun onNothingSelected(parent: AdapterView<*>?) {
 
@@ -225,21 +183,6 @@ class SearchFragment : Fragment(), View.OnClickListener, AdapterView.OnItemSelec
 
     }
 
-    override fun onClick(view: View?) {
-        val intent = Intent(view?.context, DetailActivity::class.java)
-        val holder = view?.tag as MainAdapter.RecipeViewHolder
-        intent.putExtra(DetailActivity.RECIPE,
-                mainAdapter?.getRecipe(holder.adapterPosition));
-        startActivity(intent)
-    }
-
-    // TODO: Rename method, update argument and hook method into UI event
-    fun onButtonPressed() {
-        if (mListener != null) {
-//            mListener!!.onFragmentInteraction()
-        }
-    }
-
     override fun onAttach(context: Context) {
         super.onAttach(context)
         if (context is OnFragmentInteractionListener) {
@@ -254,15 +197,6 @@ class SearchFragment : Fragment(), View.OnClickListener, AdapterView.OnItemSelec
         mListener = null
     }
 
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     *
-     *
-     * See the Android Training lesson [Communicating with Other Fragments](http://developer.android.com/training/basics/fragments/communicating.html) for more information.
-     */
     interface OnFragmentInteractionListener {
         // TODO: Update argument type and name
 //        fun onFragmentInteraction()

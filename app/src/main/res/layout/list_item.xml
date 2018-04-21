@@ -16,6 +16,7 @@
             android:layout_alignParentRight="true"
             android:layout_centerVertical="true"
             android:layout_marginRight="@dimen/padd_10"
+            android:transitionName="recipe_img"
             android:src="@drawable/delete" />
 
         <TextView
