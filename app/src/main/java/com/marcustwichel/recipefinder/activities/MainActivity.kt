@@ -1,4 +1,4 @@
-package com.marcustwichel.recipefinder
+package com.marcustwichel.recipefinder.activities
 
 import com.marcustwichel.recipefinder.recipefinder.fragments.ListFragment
 import android.os.Bundle
@@ -18,7 +18,7 @@ import com.firebase.ui.auth.AuthUI
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.gms.tasks.Task
 import com.google.firebase.firestore.FirebaseFirestore
-
+import com.marcustwichel.recipefinder.R
 
 
 class MainActivity : AppCompatActivity(),
@@ -26,10 +26,12 @@ class MainActivity : AppCompatActivity(),
         KitchenFragment.OnFragmentInteractionListener,
         ListFragment.OnFragmentInteractionListener{
 
+    val TAG : String = "MainActivity"
+
     lateinit var mAuth : FirebaseAuth
     lateinit var mDB : FirebaseFirestore
     lateinit var toolbar : Toolbar
-    val TAG : String = "MainActivity"
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,7 +41,6 @@ class MainActivity : AppCompatActivity(),
 
         mAuth = FirebaseAuth.getInstance()
         mDB = FirebaseFirestore.getInstance()
-
 
 
         val bottomNavigationView = findViewById(R.id.bottom_nav) as BottomNavigationView
@@ -74,7 +75,7 @@ class MainActivity : AppCompatActivity(),
                     true
                 })
         //set first screen to search
-        toolbar.setTitle("Search")
+        supportActionBar?.setTitle("Search")
         getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.frag_holder, SearchFragment() as Fragment)

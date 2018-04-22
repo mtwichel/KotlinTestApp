@@ -1,4 +1,4 @@
-package com.marcustwichel.recipefinder
+package com.marcustwichel.recipefinder.adapters
 
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import com.bumptech.glide.Glide
+import com.marcustwichel.recipefinder.R
 import com.marcustwichel.recipefinder.recipefinder.model.Ingredient
 
 /**
@@ -25,16 +26,32 @@ class DetailIngAdapter(var ings : List<Ingredient>) :
 
     override fun onBindViewHolder(holder: StepViewHolder, position: Int) {
         val currentStep = ings[position]
-        if(currentStep.amount != 1.0){
-            if(currentStep.amount - currentStep.amount.toInt() == 0.0 ){
-                //is whole
-                holder?.ingText?.text = "" + currentStep.amount.toInt() + " " + currentStep.unit + " " + currentStep.name;
-            }else {
-                holder?.ingText?.text = "" + currentStep.amount + " " + currentStep.unit + " " + currentStep.name;
-            }
+        var currentAmount = ""
+        if(currentStep.amount - currentStep.amount.toInt() == 0.0 ){
+            //is whole
+            currentAmount = currentStep.amount.toInt().toString()
         }else{
-            holder?.ingText?.text = "" + currentStep.amount.toInt() + " " + currentStep.unit + " " + currentStep.name;
+            var decimalPart = currentStep.amount - currentStep.amount.toInt()
+            var intPart = currentStep.amount.toInt().toString()
+            if(intPart.equals("0") ){
+                intPart = ""
+            }
+            if(decimalPart - 0.25 < 0.00001){
+                currentAmount = intPart + "¼"
+            }else if(decimalPart - 0.3333333 < 0.00001){
+                currentAmount = intPart + "⅓"
+            }else if(decimalPart - 0.5 < 0.00001){
+                currentAmount = intPart + "½"
+            }else if(decimalPart - 0.6666666 < 0.00001){
+                currentAmount = intPart + "⅔"
+            }else if(decimalPart - 0.75 < 0.00001){
+                currentAmount = intPart + "¾"
+            }else {
+                currentAmount = currentStep.amount.toString()
+            }
         }
+
+        holder?.ingText?.text = currentAmount + " " + currentStep.unit + " " + currentStep.name
 
         if(currentStep.image.isNotEmpty()){
             Glide.with(holder?.ingText?.context!!)

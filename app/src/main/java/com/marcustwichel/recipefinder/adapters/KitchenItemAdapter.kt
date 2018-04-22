@@ -1,4 +1,4 @@
-package com.marcustwichel.recipefinder
+package com.marcustwichel.recipefinder.adapters
 
 import android.support.v7.widget.RecyclerView
 import android.util.Log
@@ -11,8 +11,7 @@ import android.widget.RelativeLayout
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.EventListener
 import com.google.firebase.firestore.FirebaseFirestore
-import com.marcustwichel.recipefinder.model.KitchenItemList
-
+import com.marcustwichel.recipefinder.R
 
 
 class KitchenItemAdapter() : RecyclerView.Adapter<KitchenItemAdapter.KitchenItemViewHolder>(), Serializable{

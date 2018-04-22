@@ -1,6 +1,7 @@
 package com.marcustwichel.recipefinder.recipefinder.api
 
 import android.util.Log
+import com.marcustwichel.recipefinder.model.AutocompleteResult
 import com.marcustwichel.recipefinder.model.RecipeSearchResult
 import com.marcustwichel.recipefinder.recipefinder.model.Recipe
 import com.marcustwichel.recipefinder.recipefinder.model.RecipeIngResult
@@ -44,6 +45,13 @@ class RecipeRetriver {
 
     fun getRecipeIngById(callback: Callback<RecipeIngResult>, id: Int){
         val call = service.getRecipeIngById(id)
+        Log.d(TAG, call.request().url().toString())
+        call.enqueue(callback)
+    }
+
+    fun getIngredientsAutocomplete(callback: Callback<List<AutocompleteResult>>, query: String){
+        val call = service.getIngredientsAutocomplete(query)
+        Log.d(TAG, call.request().url().toString())
         call.enqueue(callback)
     }
 }

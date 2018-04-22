@@ -1,4 +1,4 @@
-package com.marcustwichel.recipefinder
+package com.marcustwichel.recipefinder.activities
 
 import android.content.Intent
 import android.os.Bundle
@@ -9,7 +9,6 @@ import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.MenuItem
 import android.view.View
-import android.widget.AdapterView
 import com.marcustwichel.recipefinder.model.RecipeSearchResult
 import com.marcustwichel.recipefinder.recipefinder.api.RecipeRetriver
 import com.marcustwichel.recipefinder.recipefinder.model.Recipe
@@ -19,7 +18,8 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import android.support.v4.app.ActivityOptionsCompat
-
+import com.marcustwichel.recipefinder.R
+import com.marcustwichel.recipefinder.adapters.MainAdapter
 
 
 class RecipeResultsActivity : AppCompatActivity(), View.OnClickListener {
@@ -43,7 +43,7 @@ class RecipeResultsActivity : AppCompatActivity(), View.OnClickListener {
         setContentView(R.layout.activity_recipe_results)
         setSupportActionBar(toolbar)
 
-        toolbar.setTitle("Search Results")
+        supportActionBar?.setTitle("Search Results")
 
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 

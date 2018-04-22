@@ -1,5 +1,6 @@
 package com.marcustwichel.recipefinder.recipefinder.api
 
+import com.marcustwichel.recipefinder.model.AutocompleteResult
 import com.marcustwichel.recipefinder.model.RecipeSearchResult
 import com.marcustwichel.recipefinder.recipefinder.model.Recipe
 import com.marcustwichel.recipefinder.recipefinder.model.RecipeIngResult
@@ -30,5 +31,9 @@ interface RecipieAPI {
     @Headers("X-Mashape-Key: 7lqJ5Hl4RJmshs4bsOyrsroUiH2cp1pwFfjjsnU7UssW1DWdF3")
     @GET("recipes/{id}/information")
     fun getRecipeIngById(@Path("id") recipeId: Int): Call<RecipeIngResult>
+
+    @Headers("X-Mashape-Key: 7lqJ5Hl4RJmshs4bsOyrsroUiH2cp1pwFfjjsnU7UssW1DWdF3")
+    @GET("food/ingredients/autocomplete/?number=5")
+    fun getIngredientsAutocomplete(@Query("query") query: String): Call<List<AutocompleteResult>>
 
 }

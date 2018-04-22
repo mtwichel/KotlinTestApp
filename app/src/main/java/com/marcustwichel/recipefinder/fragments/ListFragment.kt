@@ -17,6 +17,8 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import com.marcustwichel.recipefinder.*
+import com.marcustwichel.recipefinder.adapters.ListItemAdapter
+import com.marcustwichel.recipefinder.adapters.RecyclerListItemTouchHelper
 
 /**
  * A simple [Fragment] subclass.

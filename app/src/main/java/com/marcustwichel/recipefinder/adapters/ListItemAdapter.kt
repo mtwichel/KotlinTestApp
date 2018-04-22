@@ -1,4 +1,4 @@
-package com.marcustwichel.recipefinder
+package com.marcustwichel.recipefinder.adapters
 
 import android.graphics.Paint
 import android.support.v7.widget.RecyclerView
@@ -11,6 +11,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.EventListener
 import com.google.firebase.firestore.FirebaseFirestore
+import com.marcustwichel.recipefinder.R
 import java.io.Serializable
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap

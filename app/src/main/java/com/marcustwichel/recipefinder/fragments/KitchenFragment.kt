@@ -11,18 +11,22 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 
-import com.marcustwichel.recipefinder.RecyclerKitchenItemTouchHelper
-import com.marcustwichel.recipefinder.KitchenItemAdapter
+import com.marcustwichel.recipefinder.adapters.RecyclerKitchenItemTouchHelper
+import com.marcustwichel.recipefinder.adapters.KitchenItemAdapter
 import android.support.v7.widget.helper.ItemTouchHelper
 import android.support.design.widget.Snackbar
 import android.graphics.Color
+import android.text.Editable
+import android.text.TextWatcher
+import android.util.Log
 import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
-import android.widget.EditText
-import android.widget.RelativeLayout
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import com.marcustwichel.recipefinder.R
+import com.marcustwichel.recipefinder.model.AutocompleteResult
+import com.marcustwichel.recipefinder.recipefinder.api.RecipeRetriver
+import retrofit2.Call
+import retrofit2.Response
 
 
 /**
@@ -38,13 +42,15 @@ class KitchenFragment : Fragment(), RecyclerKitchenItemTouchHelper.RecyclerItemT
     lateinit var recyclerView : RecyclerView
     lateinit var mItemAdapter : KitchenItemAdapter
     lateinit var mRelativeLayout : RelativeLayout
-    lateinit var itemInput : EditText
+    lateinit var itemInput : AutoCompleteTextView
+    lateinit var retriver : RecipeRetriver
 
 
     private var mListener: OnFragmentInteractionListener? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        retriver = RecipeRetriver()
         if (arguments != null) {
         }
     }
@@ -66,24 +72,83 @@ class KitchenFragment : Fragment(), RecyclerKitchenItemTouchHelper.RecyclerItemT
         val itemTouchHelperCallback = RecyclerKitchenItemTouchHelper(0, ItemTouchHelper.LEFT, this)
         ItemTouchHelper(itemTouchHelperCallback).attachToRecyclerView(recyclerView)
 
-        itemInput = view.findViewById(R.id.add_kitchen_item) as EditText
+
+        var autocompleteList : ArrayList<String>? = null
+        val callback = object : retrofit2.Callback<List<AutocompleteResult>> {
+            override fun onFailure(call: Call<List<AutocompleteResult>>?, t: Throwable?) {
+            }
+
+            override fun onResponse(call: Call<List<AutocompleteResult>>?, response: Response<List<AutocompleteResult>>?) {
+                response?.isSuccessful.let {
+                    val responseList = response?.body() as ArrayList
+                    autocompleteList = autocompleteResultListtoStringList(responseList)
+                    if(autocompleteList != null) {
+                        Log.i(TAG, autocompleteList.toString())
+                        var adapter = ArrayAdapter<String>(context, android.R.layout.simple_list_item_1, autocompleteList)
+                        itemInput.setAdapter(adapter)
+                        if(adapter.isEmpty){
+                            itemInput.dismissDropDown()
+                        }else {
+                            itemInput.showDropDown()
+                        }
+                    }else{
+                        Log.d(TAG, "list not null")
+                    }
+                }
+            }
+
+        }
+
+        itemInput = view.findViewById(R.id.add_kitchen_item) as AutoCompleteTextView
+        itemInput.addTextChangedListener(object : TextWatcher{
+            override fun afterTextChanged(s: Editable?) {
+            }
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+            }
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                Log.d(TAG, "onTextChanged")
+                retriver.getIngredientsAutocomplete(callback, s.toString())
+            }
+
+        })
+
+        itemInput.onItemClickListener = object : AdapterView.OnItemClickListener{
+            override fun onItemClick(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                addItemToKitchen()
+            }
+
+        }
 
         itemInput.setOnEditorActionListener(object : TextView.OnEditorActionListener {
             override fun onEditorAction(view: TextView?, actionId: Int, keyEvent: KeyEvent?): Boolean {
                 var handled : Boolean = false;
                 if (actionId == EditorInfo.IME_ACTION_DONE) {
-                    if(!itemInput.text.toString().equals("")) {
-                        addItem(itemInput.text.toString())
-                        itemInput.setText("")
-                        itemInput.clearFocus()
-                    }
-                handled = true;
-        }
-        return handled;
+                    addItemToKitchen()
+                    handled = true
+                }
+                return handled
             }
         })
 
         return view
+    }
+
+    private fun addItemToKitchen() {
+        if (!itemInput.text.toString().equals("")) {
+            addItem(itemInput.text.toString())
+            itemInput.setText("")
+            itemInput.clearFocus()
+        }
+    }
+
+    private fun autocompleteResultListtoStringList(input : ArrayList<AutocompleteResult>?) : ArrayList<String> {
+        var ans = ArrayList<String>()
+        input?.forEach{ item ->
+            ans.add(item.name)
+        }
+        return ans
     }
 
     private fun addItem(item: String) {
