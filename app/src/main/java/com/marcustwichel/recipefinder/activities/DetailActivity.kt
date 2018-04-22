@@ -4,6 +4,7 @@ import android.graphics.Color
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.design.widget.CollapsingToolbarLayout
+import android.support.design.widget.FloatingActionButton
 import android.support.design.widget.Snackbar
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
@@ -38,9 +39,11 @@ class DetailActivity : AppCompatActivity(), View.OnClickListener {
     lateinit var mAuth : FirebaseAuth
     lateinit var mDB : FirebaseFirestore
     lateinit var kitchenList : ArrayList<String>
+    lateinit var savedRecipies : ArrayList<Int>
 
     lateinit var stepsRecyclerView: RecyclerView
     lateinit var ingRecyclerView: RecyclerView
+    lateinit var ingAdapter : DetailIngAdapter
     lateinit var progressBar : ProgressBar
 
     lateinit var loadingSnackbar : Snackbar
@@ -51,17 +54,36 @@ class DetailActivity : AppCompatActivity(), View.OnClickListener {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_detail)
 
+        mAuth = FirebaseAuth.getInstance()
+        mDB = FirebaseFirestore.getInstance()
+        val recipe = intent.getSerializableExtra(RECIPE) as Recipe?
+
         //Add back button
         val detailToolbar = findViewById(R.id.detail_toolbar) as Toolbar
         setSupportActionBar(detailToolbar)
-        getSupportActionBar()?.setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar()?.setDisplayHomeAsUpEnabled(true)
 
+        mDB.collection("savedRecipes").document(mAuth.currentUser!!.uid).get().addOnCompleteListener {
+            task ->
+            if(task.result.data?.get("recipes") == null){
+                var data = HashMap<String, ArrayList<Int>>()
+                data.put("recipes", ArrayList<Int>())
+                mDB.collection("savedRecipes").document(mAuth.currentUser!!.uid).set(data as MutableMap<String, Any>)
+                savedRecipies = ArrayList<Int>()
+            }else{
+                savedRecipies = task.result.data?.get("recipes") as ArrayList<Int>
+            }
 
-        val recipe = intent.getSerializableExtra(RECIPE) as Recipe?
+        }
+
+        var saveFab = findViewById(R.id.fab_save_recipe) as FloatingActionButton
+        saveFab.setOnClickListener {
+            savedRecipies.add(recipe!!.id)
+            mDB.collection("savedRecipes").document(mAuth.currentUser!!.uid).update("recipes", savedRecipies)
+            Snackbar.make(ingRecyclerView, "Recipe Saved!", Snackbar.LENGTH_SHORT).show()
+        }
 
         kitchenList = ArrayList()
-        mAuth = FirebaseAuth.getInstance()
-        mDB = FirebaseFirestore.getInstance()
         mDB.collection("kitchens").document(mAuth.currentUser!!.uid).get().addOnCompleteListener {
             task ->
             kitchenList = task.result.data?.get("items") as ArrayList<String>
@@ -105,7 +127,7 @@ class DetailActivity : AppCompatActivity(), View.OnClickListener {
                 response?.isSuccessful.let {
                     val recipeStepsResult = response?.body()
                     if(recipeStepsResult?.size!=0) {
-                        val steps = recipeStepsResult?.get(0)?.steps
+                        val steps = recipeStepsResult?.get(0)?.steps as ArrayList<Step>
                         displaySteps(steps!!)
                         progressBar.visibility = View.INVISIBLE
                     }else{
@@ -140,7 +162,7 @@ class DetailActivity : AppCompatActivity(), View.OnClickListener {
         val RECIPE = "RECIPE"
     }
 
-    fun displaySteps(steps : List<Step>){
+    fun displaySteps(steps : ArrayList<Step>){
         stepsRecyclerView = findViewById(R.id.steps_recycler_view) as RecyclerView
 
         stepsRecyclerView.layoutManager = LinearLayoutManager(this)
@@ -150,18 +172,23 @@ class DetailActivity : AppCompatActivity(), View.OnClickListener {
     fun displayIng(ings : List<Ingredient>){
         ingRecyclerView = findViewById(R.id.ing_recycler_view) as RecyclerView
         ingRecyclerView.layoutManager = LinearLayoutManager(this)
-        ingRecyclerView.adapter = DetailIngAdapter(ings, kitchenList, this)
+        ingAdapter = DetailIngAdapter(ings, kitchenList, this)
+        ingRecyclerView.adapter = ingAdapter
     }
 
     override fun onClick(view: View?) {
         val itemToBeAdded = toTitleCase(ings!![ingRecyclerView.getChildAdapterPosition(view)].name)
         kitchenList.add(0, itemToBeAdded)
-        mDB.collection("kitchens").document(mAuth.currentUser!!.uid).update("items", kitchenList)
+        ingAdapter.kitchenList.add(0, itemToBeAdded)
+        mDB.collection("kitchens").document(mAuth.currentUser!!.uid).update("items", kitchenList).addOnSuccessListener {
+            ingAdapter.notifyDataSetChanged()
+        }
         loadingSnackbar = Snackbar.make(stepsRecyclerView,
                         itemToBeAdded + " added to kitchen", Snackbar.LENGTH_LONG)
 
         loadingSnackbar.setAction("UNDO", View.OnClickListener {
             kitchenList.remove(itemToBeAdded)
+            ingAdapter.kitchenList.remove(itemToBeAdded)
             mDB.collection("kitchens").document(mAuth.currentUser!!.uid).update("items", kitchenList)
         })
         loadingSnackbar.setActionTextColor(Color.YELLOW)

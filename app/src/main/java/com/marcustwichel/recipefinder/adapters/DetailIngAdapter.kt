@@ -34,6 +34,8 @@ class DetailIngAdapter(var ings : List<Ingredient>, var kitchenList : ArrayList<
 
         if(kitchenList.contains(toTitleCase(currentIng.name))){
             holder.ingText?.setTypeface(holder.ingText?.getTypeface(), Typeface.BOLD)
+        }else{
+            holder.ingText?.setTypeface(holder.ingText?.getTypeface(), Typeface.NORMAL)
         }
 
         var currentAmount = ""
