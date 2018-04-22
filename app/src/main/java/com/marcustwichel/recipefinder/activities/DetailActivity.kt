@@ -1,5 +1,6 @@
 package com.marcustwichel.recipefinder.activities
 
+import android.graphics.Color
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.design.widget.CollapsingToolbarLayout
@@ -7,6 +8,7 @@ import android.support.design.widget.Snackbar
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.Toolbar
+import android.util.Log
 import android.view.MenuItem
 import android.view.View
 import android.widget.ImageView
@@ -16,6 +18,8 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.GlideDrawable
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.marcustwichel.recipefinder.R
 import com.marcustwichel.recipefinder.adapters.DetailIngAdapter
 import com.marcustwichel.recipefinder.adapters.DetailStepsAdapter
@@ -27,11 +31,21 @@ import retrofit2.Callback
 import retrofit2.Response
 import java.lang.Exception
 
-class DetailActivity : AppCompatActivity() {
+class DetailActivity : AppCompatActivity(), View.OnClickListener {
+
+    val TAG = "DetailActivity"
+
+    lateinit var mAuth : FirebaseAuth
+    lateinit var mDB : FirebaseFirestore
+    lateinit var kitchenList : ArrayList<String>
 
     lateinit var stepsRecyclerView: RecyclerView
     lateinit var ingRecyclerView: RecyclerView
     lateinit var progressBar : ProgressBar
+
+    lateinit var loadingSnackbar : Snackbar
+
+    var ings : List<Ingredient>? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,16 +59,21 @@ class DetailActivity : AppCompatActivity() {
 
         val recipe = intent.getSerializableExtra(RECIPE) as Recipe?
 
-
-        //Add Steps
-        getRecipe(recipe?.id!!)
+        kitchenList = ArrayList()
+        mAuth = FirebaseAuth.getInstance()
+        mDB = FirebaseFirestore.getInstance()
+        mDB.collection("kitchens").document(mAuth.currentUser!!.uid).get().addOnCompleteListener {
+            task ->
+            kitchenList = task.result.data?.get("items") as ArrayList<String>
+            getRecipe(recipe?.id!!)
+        }
 
 
         //Add Title
         val collapsing = findViewById(R.id.collapsing_toolbar) as CollapsingToolbarLayout
         collapsing.title = " "
         val recipeTitle = findViewById(R.id.recipe_title) as TextView
-        recipeTitle.text = recipe.title
+        recipeTitle.text = recipe?.title
 
 
         //Add Image
@@ -104,7 +123,7 @@ class DetailActivity : AppCompatActivity() {
             override fun onResponse(call: Call<RecipeIngResult>?, response: Response<RecipeIngResult>?) {
                 response?.isSuccessful.let {
                     val recipeIngResult = response?.body()
-                    val ings = recipeIngResult?.extendedIngredients
+                    ings = recipeIngResult?.extendedIngredients
                     displayIng(ings!!)
                 }
             }
@@ -122,7 +141,6 @@ class DetailActivity : AppCompatActivity() {
     }
 
     fun displaySteps(steps : List<Step>){
-        // on some click or some loading we need to wait for...
         stepsRecyclerView = findViewById(R.id.steps_recycler_view) as RecyclerView
 
         stepsRecyclerView.layoutManager = LinearLayoutManager(this)
@@ -130,12 +148,24 @@ class DetailActivity : AppCompatActivity() {
     }
 
     fun displayIng(ings : List<Ingredient>){
-        // on some click or some loading we need to wait for...
-
         ingRecyclerView = findViewById(R.id.ing_recycler_view) as RecyclerView
-
         ingRecyclerView.layoutManager = LinearLayoutManager(this)
-        ingRecyclerView.adapter = DetailIngAdapter(ings)
+        ingRecyclerView.adapter = DetailIngAdapter(ings, kitchenList, this)
+    }
+
+    override fun onClick(view: View?) {
+        val itemToBeAdded = toTitleCase(ings!![ingRecyclerView.getChildAdapterPosition(view)].name)
+        kitchenList.add(0, itemToBeAdded)
+        mDB.collection("kitchens").document(mAuth.currentUser!!.uid).update("items", kitchenList)
+        loadingSnackbar = Snackbar.make(stepsRecyclerView,
+                        itemToBeAdded + " added to kitchen", Snackbar.LENGTH_LONG)
+
+        loadingSnackbar.setAction("UNDO", View.OnClickListener {
+            kitchenList.remove(itemToBeAdded)
+            mDB.collection("kitchens").document(mAuth.currentUser!!.uid).update("items", kitchenList)
+        })
+        loadingSnackbar.setActionTextColor(Color.YELLOW)
+        loadingSnackbar.show()
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -147,5 +177,13 @@ class DetailActivity : AppCompatActivity() {
         }
 
         return super.onOptionsItemSelected(item)
+    }
+
+    private fun toTitleCase(string :String) : String{
+        return when (string.length) {
+            0 -> ""
+            1 -> string.toUpperCase()
+            else -> string[0].toUpperCase() + string.substring(1)
+        }
     }
 }

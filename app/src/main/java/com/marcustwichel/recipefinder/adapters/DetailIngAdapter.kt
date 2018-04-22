@@ -1,5 +1,6 @@
 package com.marcustwichel.recipefinder.adapters
 
+import android.graphics.Typeface
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
@@ -7,14 +8,18 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import com.bumptech.glide.Glide
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.marcustwichel.recipefinder.R
 import com.marcustwichel.recipefinder.recipefinder.model.Ingredient
 
 /**
  * Created by mtwichel on 3/16/18.
  */
-class DetailIngAdapter(var ings : List<Ingredient>) :
+class DetailIngAdapter(var ings : List<Ingredient>, var kitchenList : ArrayList<String>, val clickListener : View.OnClickListener) :
         RecyclerView.Adapter<DetailIngAdapter.StepViewHolder>() {
+
+
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): StepViewHolder {
         return StepViewHolder(LayoutInflater.from(parent?.context).inflate(R.layout.ing_item, parent, false))
@@ -25,14 +30,19 @@ class DetailIngAdapter(var ings : List<Ingredient>) :
     }
 
     override fun onBindViewHolder(holder: StepViewHolder, position: Int) {
-        val currentStep = ings[position]
+        val currentIng = ings[position]
+
+        if(kitchenList.contains(toTitleCase(currentIng.name))){
+            holder.ingText?.setTypeface(holder.ingText?.getTypeface(), Typeface.BOLD)
+        }
+
         var currentAmount = ""
-        if(currentStep.amount - currentStep.amount.toInt() == 0.0 ){
+        if(currentIng.amount - currentIng.amount.toInt() == 0.0 ){
             //is whole
-            currentAmount = currentStep.amount.toInt().toString()
+            currentAmount = currentIng.amount.toInt().toString()
         }else{
-            var decimalPart = currentStep.amount - currentStep.amount.toInt()
-            var intPart = currentStep.amount.toInt().toString()
+            var decimalPart = currentIng.amount - currentIng.amount.toInt()
+            var intPart = currentIng.amount.toInt().toString()
             if(intPart.equals("0") ){
                 intPart = ""
             }
@@ -47,16 +57,24 @@ class DetailIngAdapter(var ings : List<Ingredient>) :
             }else if(decimalPart - 0.75 < 0.00001){
                 currentAmount = intPart + "¾"
             }else {
-                currentAmount = currentStep.amount.toString()
+                currentAmount = currentIng.amount.toString()
             }
         }
 
-        holder?.ingText?.text = currentAmount + " " + currentStep.unit + " " + currentStep.name
+        holder?.ingText?.text = currentAmount + " " + currentIng.unit + " " + currentIng.name
 
-        if(currentStep.image.isNotEmpty()){
-            Glide.with(holder?.ingText?.context!!)
-                    .load(currentStep.image)
+
+        Glide.with(holder?.ingText?.context!!)
+                    .load(currentIng.image)
                     .into(holder?.ingImg)
+
+    }
+
+    private fun toTitleCase(string :String) : String{
+        return when (string.length) {
+            0 -> ""
+            1 -> string.toUpperCase()
+            else -> string[0].toUpperCase() + string.substring(1)
         }
     }
 
@@ -66,7 +84,9 @@ class DetailIngAdapter(var ings : List<Ingredient>) :
         var ingImg : ImageView?
 
         init {
-
+            if(clickListener != null){
+                itemView.setOnClickListener(clickListener)
+            }
             itemView.tag = this
             ingText = itemView.findViewById(R.id.ing_text) as TextView
             ingImg = itemView.findViewById(R.id.ing_img) as ImageView

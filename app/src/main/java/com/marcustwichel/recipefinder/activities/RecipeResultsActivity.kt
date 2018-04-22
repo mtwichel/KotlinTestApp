@@ -49,6 +49,7 @@ class RecipeResultsActivity : AppCompatActivity(), View.OnClickListener {
 
         recyclerView = findViewById(R.id.recycler_view_results)
         recyclerView.layoutManager = LinearLayoutManager(this)
+
         retriever = RecipeRetriver()
 
         searchString = intent.getStringExtra("searchString")
