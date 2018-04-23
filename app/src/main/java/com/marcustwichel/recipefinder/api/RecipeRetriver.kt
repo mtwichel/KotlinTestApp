@@ -1,6 +1,7 @@
 package com.marcustwichel.recipefinder.recipefinder.api
 
 import android.util.Log
+import com.marcustwichel.recipefinder.model.AutocompleteResult
 import com.marcustwichel.recipefinder.model.RecipeSearchResult
 import com.marcustwichel.recipefinder.recipefinder.model.Recipe
 import com.marcustwichel.recipefinder.recipefinder.model.RecipeIngResult
@@ -12,7 +13,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 /**
  * Created by marcus.twichel on 3/14/18.
  */
-class RecipieRetriver {
+class RecipeRetriver {
 
     val TAG = "RecipeRetriver"
 
@@ -44,6 +45,19 @@ class RecipieRetriver {
 
     fun getRecipeIngById(callback: Callback<RecipeIngResult>, id: Int){
         val call = service.getRecipeIngById(id)
+        Log.d(TAG, call.request().url().toString())
+        call.enqueue(callback)
+    }
+
+    fun getIngredientsAutocomplete(callback: Callback<List<AutocompleteResult>>, query: String){
+        val call = service.getIngredientsAutocomplete(query)
+        Log.d(TAG, call.request().url().toString())
+        call.enqueue(callback)
+    }
+
+    fun getRecipeById(callback: Callback<Recipe>, id: Int){
+        val call = service.getRecipeById(id)
+        Log.d(TAG, call.request().url().toString())
         call.enqueue(callback)
     }
 }

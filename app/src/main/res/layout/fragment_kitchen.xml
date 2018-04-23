@@ -13,7 +13,7 @@
         android:layout_alignParentTop="true"
         app:srcCompat="@drawable/add" />
 
-    <EditText
+    <AutoCompleteTextView
         android:id="@+id/add_kitchen_item"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -24,6 +24,7 @@
         android:inputType="text"
         android:imeOptions="actionDone"
         android:hint="Add item here"
+        android:completionThreshold="1"
         />
 
     <android.support.v7.widget.RecyclerView

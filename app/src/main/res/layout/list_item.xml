@@ -16,6 +16,7 @@
             android:layout_alignParentRight="true"
             android:layout_centerVertical="true"
             android:layout_marginRight="@dimen/padd_10"
+            android:transitionName="recipe_img"
             android:src="@drawable/delete" />
 
         <TextView
@@ -38,8 +39,8 @@
         android:padding="@dimen/padd_10">
 
 
-        <CheckBox
-            android:id="@+id/checkbox"
+        <TextView
+            android:id="@+id/list_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="5dp"

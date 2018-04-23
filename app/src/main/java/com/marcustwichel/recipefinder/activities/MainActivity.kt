@@ -1,4 +1,4 @@
-package com.marcustwichel.recipefinder
+package com.marcustwichel.recipefinder.activities
 
 import com.marcustwichel.recipefinder.recipefinder.fragments.ListFragment
 import android.os.Bundle
@@ -18,6 +18,11 @@ import com.firebase.ui.auth.AuthUI
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.gms.tasks.Task
 import com.google.firebase.firestore.FirebaseFirestore
+import com.marcustwichel.recipefinder.R
+import android.support.v7.widget.ShareActionProvider;
+import android.support.v4.view.MenuItemCompat
+
+
 
 
 
@@ -26,10 +31,13 @@ class MainActivity : AppCompatActivity(),
         KitchenFragment.OnFragmentInteractionListener,
         ListFragment.OnFragmentInteractionListener{
 
+    val TAG : String = "MainActivity"
+
     lateinit var mAuth : FirebaseAuth
     lateinit var mDB : FirebaseFirestore
     lateinit var toolbar : Toolbar
-    val TAG : String = "MainActivity"
+
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,7 +47,6 @@ class MainActivity : AppCompatActivity(),
 
         mAuth = FirebaseAuth.getInstance()
         mDB = FirebaseFirestore.getInstance()
-
 
 
         val bottomNavigationView = findViewById(R.id.bottom_nav) as BottomNavigationView
@@ -74,13 +81,14 @@ class MainActivity : AppCompatActivity(),
                     true
                 })
         //set first screen to search
-        toolbar.setTitle("Search")
+        supportActionBar?.setTitle("Search")
         getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.frag_holder, SearchFragment() as Fragment)
                 .commit()
 
     }
+
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -103,6 +111,10 @@ class MainActivity : AppCompatActivity(),
             R.id.action_settings -> {
                 Toast.makeText(this, "Settings not implemented yet", Toast.LENGTH_LONG).show()
             }
+            R.id.action_view_saved -> {
+                var intent = Intent(this, SavedRecipesActivity::class.java)
+                startActivity(intent)
+            }
 
         }
         return false
@@ -114,15 +126,9 @@ class MainActivity : AppCompatActivity(),
     }
 
     private fun signOut(){
-        AuthUI.getInstance()
-                .signOut(this)
-                .addOnCompleteListener(object : OnCompleteListener<Void> {
-                    override fun onComplete(task: Task<Void>) {
-                        Toast.makeText(this@MainActivity, "Signed Out", Toast.LENGTH_LONG).show()
-                        val intent = Intent(this@MainActivity, IntroActivity::class.java)
-                        startActivity(intent)
-                    }
-                })
+        val intent = Intent(this@MainActivity, IntroActivity::class.java)
+        intent.putExtra(IntroActivity.FROM, IntroActivity.SIGN_OUT)
+        startActivity(intent)
     }
 
     override fun onStart() {

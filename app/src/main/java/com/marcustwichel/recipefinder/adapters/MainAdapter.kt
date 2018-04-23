@@ -1,4 +1,4 @@
-package com.marcustwichel.recipefinder
+package com.marcustwichel.recipefinder.adapters
 
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import com.bumptech.glide.Glide
+import com.marcustwichel.recipefinder.R
 import com.marcustwichel.recipefinder.recipefinder.model.Recipe
 
 /**
@@ -35,6 +36,7 @@ class MainAdapter(var recipes: List<Recipe>,
                     .load(recipie.image)
                     .into(holder?.recipe_photo)
         }
+        holder.recipe_photo.transitionName = (recipie.id.toString())
         holder?.usedMissing?.text =
                 "Used: " +
                 recipie.usedIngredientCount.toString() +
