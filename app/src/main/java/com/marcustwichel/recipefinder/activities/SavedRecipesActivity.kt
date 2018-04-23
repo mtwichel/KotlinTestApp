@@ -3,23 +3,28 @@ package com.marcustwichel.recipefinder.activities
 import android.content.Intent
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Parcelable
 import android.support.v4.app.ActivityOptionsCompat
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
+import android.support.v7.widget.helper.ItemTouchHelper
 import android.util.Log
 import android.view.View
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.marcustwichel.recipefinder.R
 import com.marcustwichel.recipefinder.adapters.MainAdapter
+import com.marcustwichel.recipefinder.adapters.RecyclerKitchenItemTouchHelper
+import com.marcustwichel.recipefinder.adapters.RecyclerSavedItemTouchHelper
 import com.marcustwichel.recipefinder.adapters.SavedRecipesAdapter
 import com.marcustwichel.recipefinder.recipefinder.api.RecipeRetriver
 import com.marcustwichel.recipefinder.recipefinder.model.Recipe
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.io.Serializable
 
-class SavedRecipesActivity : AppCompatActivity(), View.OnClickListener {
+class SavedRecipesActivity() : AppCompatActivity(), View.OnClickListener, RecyclerSavedItemTouchHelper.SavedRecipeSwipeListener, Serializable {
 
     val TAG = "SavedRecipesActivity"
 
@@ -27,18 +32,24 @@ class SavedRecipesActivity : AppCompatActivity(), View.OnClickListener {
     val mDB = FirebaseFirestore.getInstance()
     val retriver = RecipeRetriver()
     var savedRecipes = ArrayList<Recipe?>()
+    var savedRecipeIds = ArrayList<Int>()
 
     lateinit var recyclerView : RecyclerView
     lateinit var mRecipeAdapter : SavedRecipesAdapter
+
+    constructor(parcel: android.os.Parcel) : this() {
+
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_saved_recipes)
 
         mDB.collection("savedRecipes").document(mAuth.currentUser!!.uid).addSnapshotListener { documentSnapshot, firebaseFirestoreException ->
-
             var doneCheck = 0
-            val savedRecipeIds = documentSnapshot?.data?.get("recipes") as ArrayList<Int>
+            savedRecipeIds = documentSnapshot?.data?.get("recipes") as ArrayList<Int>
+            savedRecipeIds.sort()
+            savedRecipes = ArrayList()
             val callback = object : Callback<Recipe> {
                 override fun onFailure(call: Call<Recipe>?, t: Throwable?) {
                     Log.w(TAG, "falure", t)
@@ -54,6 +65,10 @@ class SavedRecipesActivity : AppCompatActivity(), View.OnClickListener {
                             mRecipeAdapter = SavedRecipesAdapter(savedRecipes, this@SavedRecipesActivity)
                             recyclerView.layoutManager = LinearLayoutManager(this@SavedRecipesActivity)
                             recyclerView.adapter = mRecipeAdapter
+
+
+                            val itemTouchHelperCallback = RecyclerSavedItemTouchHelper(0, ItemTouchHelper.LEFT, this@SavedRecipesActivity)
+                            ItemTouchHelper(itemTouchHelperCallback).attachToRecyclerView(recyclerView)
                         }
                     }
                 }
@@ -76,5 +91,10 @@ class SavedRecipesActivity : AppCompatActivity(), View.OnClickListener {
         val options = ActivityOptionsCompat.makeSceneTransitionAnimation(this, view,
                 mRecipeAdapter?.getRecipe(holder.adapterPosition)?.id.toString())
         startActivity(intent, options.toBundle())
+    }
+
+    override fun onSwiped(viewHolder: RecyclerView.ViewHolder?, direction: Int, position: Int?) {
+        savedRecipeIds.remove(savedRecipeIds[position!!])
+        mDB.collection("savedRecipes").document(mAuth.currentUser!!.uid).update("recipes", savedRecipeIds)
     }
 }
