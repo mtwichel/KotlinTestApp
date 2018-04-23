@@ -32,12 +32,6 @@ class DetailIngAdapter(var ings : List<Ingredient>, var kitchenList : ArrayList<
     override fun onBindViewHolder(holder: StepViewHolder, position: Int) {
         val currentIng = ings[position]
 
-        if(kitchenList.contains(toTitleCase(currentIng.name))){
-            holder.ingText?.setTypeface(holder.ingText?.getTypeface(), Typeface.BOLD)
-        }else{
-            holder.ingText?.setTypeface(holder.ingText?.getTypeface(), Typeface.NORMAL)
-        }
-
         var currentAmount = ""
         if(currentIng.amount - currentIng.amount.toInt() == 0.0 ){
             //is whole

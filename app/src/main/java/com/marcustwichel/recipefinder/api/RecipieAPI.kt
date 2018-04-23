@@ -36,4 +36,8 @@ interface RecipieAPI {
     @GET("food/ingredients/autocomplete/?number=5")
     fun getIngredientsAutocomplete(@Query("query") query: String): Call<List<AutocompleteResult>>
 
+    @Headers("X-Mashape-Key: 7lqJ5Hl4RJmshs4bsOyrsroUiH2cp1pwFfjjsnU7UssW1DWdF3")
+    @GET("recipes/{id}/information")
+    fun getRecipeById(@Path("id") recipeId : Int): Call<Recipe>
+
 }

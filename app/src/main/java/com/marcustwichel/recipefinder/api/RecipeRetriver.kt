@@ -54,4 +54,10 @@ class RecipeRetriver {
         Log.d(TAG, call.request().url().toString())
         call.enqueue(callback)
     }
+
+    fun getRecipeById(callback: Callback<Recipe>, id: Int){
+        val call = service.getRecipeById(id)
+        Log.d(TAG, call.request().url().toString())
+        call.enqueue(callback)
+    }
 }

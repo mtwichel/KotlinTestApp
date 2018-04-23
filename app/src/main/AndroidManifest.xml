@@ -25,7 +25,7 @@
         <activity
             android:name=".activities.MainActivity"
             android:label="@string/app_name"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".activities.DetailActivity"
             android:parentActivityName=".activities.MainActivity"
@@ -37,6 +37,15 @@
         <activity
             android:name=".activities.RecipeResultsActivity"
             android:label="@string/title_activity_recipe_results"
+            android:parentActivityName=".activities.MainActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.marcustwichel.recipefinder.activities.MainActivity" />
+        </activity>
+        <activity android:name=".activities.SavedRecipesActivity">
+            android:name=".activities.SavedRecipesActivity"
+            android:label="SavedRecipes"
             android:parentActivityName=".activities.MainActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <meta-data

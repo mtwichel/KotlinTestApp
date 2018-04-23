@@ -19,6 +19,11 @@ import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.gms.tasks.Task
 import com.google.firebase.firestore.FirebaseFirestore
 import com.marcustwichel.recipefinder.R
+import android.support.v7.widget.ShareActionProvider;
+import android.support.v4.view.MenuItemCompat
+
+
+
 
 
 class MainActivity : AppCompatActivity(),
@@ -31,6 +36,7 @@ class MainActivity : AppCompatActivity(),
     lateinit var mAuth : FirebaseAuth
     lateinit var mDB : FirebaseFirestore
     lateinit var toolbar : Toolbar
+
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -83,6 +89,7 @@ class MainActivity : AppCompatActivity(),
 
     }
 
+
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.menu_main, menu)
@@ -104,6 +111,10 @@ class MainActivity : AppCompatActivity(),
             R.id.action_settings -> {
                 Toast.makeText(this, "Settings not implemented yet", Toast.LENGTH_LONG).show()
             }
+            R.id.action_view_saved -> {
+                var intent = Intent(this, SavedRecipesActivity::class.java)
+                startActivity(intent)
+            }
 
         }
         return false
@@ -115,15 +126,9 @@ class MainActivity : AppCompatActivity(),
     }
 
     private fun signOut(){
-        AuthUI.getInstance()
-                .signOut(this)
-                .addOnCompleteListener(object : OnCompleteListener<Void> {
-                    override fun onComplete(task: Task<Void>) {
-                        Toast.makeText(this@MainActivity, "Signed Out", Toast.LENGTH_LONG).show()
-                        val intent = Intent(this@MainActivity, IntroActivity::class.java)
-                        startActivity(intent)
-                    }
-                })
+        val intent = Intent(this@MainActivity, IntroActivity::class.java)
+        intent.putExtra(IntroActivity.FROM, IntroActivity.SIGN_OUT)
+        startActivity(intent)
     }
 
     override fun onStart() {

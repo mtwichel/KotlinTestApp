@@ -1,5 +1,6 @@
 package com.marcustwichel.recipefinder.activities
 
+import android.content.Intent
 import android.graphics.Color
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
@@ -8,8 +9,10 @@ import android.support.design.widget.FloatingActionButton
 import android.support.design.widget.Snackbar
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
+import android.support.v7.widget.ShareActionProvider
 import android.support.v7.widget.Toolbar
 import android.util.Log
+import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.ImageView
@@ -40,28 +43,40 @@ class DetailActivity : AppCompatActivity(), View.OnClickListener {
     lateinit var mDB : FirebaseFirestore
     lateinit var kitchenList : ArrayList<String>
     lateinit var savedRecipies : ArrayList<Int>
+    lateinit var recipe: Recipe
 
     lateinit var stepsRecyclerView: RecyclerView
     lateinit var ingRecyclerView: RecyclerView
     lateinit var ingAdapter : DetailIngAdapter
     lateinit var progressBar : ProgressBar
+    lateinit var sourceText : TextView
+    lateinit var readyInMinutes : TextView
+
 
     lateinit var loadingSnackbar : Snackbar
 
     var ings : List<Ingredient>? = null
 
+    lateinit var mShareActionProvider: ShareActionProvider
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContentView(R.layout.activity_detail)
 
         mAuth = FirebaseAuth.getInstance()
         mDB = FirebaseFirestore.getInstance()
-        val recipe = intent.getSerializableExtra(RECIPE) as Recipe?
+        recipe = intent.getSerializableExtra(RECIPE) as Recipe
 
         //Add back button
         val detailToolbar = findViewById(R.id.detail_toolbar) as Toolbar
         setSupportActionBar(detailToolbar)
         getSupportActionBar()?.setDisplayHomeAsUpEnabled(true)
+
+        var saveFab = findViewById(R.id.fab_save_recipe) as FloatingActionButton
+        sourceText = findViewById(R.id.source_text)
+        readyInMinutes = findViewById(R.id.ready_in_minutes)
+
 
         mDB.collection("savedRecipes").document(mAuth.currentUser!!.uid).get().addOnCompleteListener {
             task ->
@@ -72,16 +87,21 @@ class DetailActivity : AppCompatActivity(), View.OnClickListener {
                 savedRecipies = ArrayList<Int>()
             }else{
                 savedRecipies = task.result.data?.get("recipes") as ArrayList<Int>
+                saveFab.setOnClickListener {
+                    Log.d(TAG, "" + savedRecipies.toString() + " | " +recipe.id)
+                    if(listContains(recipe.id, savedRecipies)){
+                        Log.d(TAG, "true")
+                        Snackbar.make(ingRecyclerView, "Recipe Already Saved", Snackbar.LENGTH_SHORT).show()
+                    }else {
+                        Log.d(TAG, "false")
+                        savedRecipies.add(recipe.id)
+                        mDB.collection("savedRecipes").document(mAuth.currentUser!!.uid).update("recipes", savedRecipies)
+                        Snackbar.make(ingRecyclerView, "Recipe Saved!", Snackbar.LENGTH_SHORT).show()
+                    }
+                }
             }
-
         }
 
-        var saveFab = findViewById(R.id.fab_save_recipe) as FloatingActionButton
-        saveFab.setOnClickListener {
-            savedRecipies.add(recipe!!.id)
-            mDB.collection("savedRecipes").document(mAuth.currentUser!!.uid).update("recipes", savedRecipies)
-            Snackbar.make(ingRecyclerView, "Recipe Saved!", Snackbar.LENGTH_SHORT).show()
-        }
 
         kitchenList = ArrayList()
         mDB.collection("kitchens").document(mAuth.currentUser!!.uid).get().addOnCompleteListener {
@@ -138,14 +158,23 @@ class DetailActivity : AppCompatActivity(), View.OnClickListener {
 
         }
 
-        val ingsCallback = object : Callback<RecipeIngResult> {
+        val recipeIngCallback = object : Callback<RecipeIngResult> {
             override fun onFailure(call: Call<RecipeIngResult>?, t: Throwable?) {
             }
 
             override fun onResponse(call: Call<RecipeIngResult>?, response: Response<RecipeIngResult>?) {
                 response?.isSuccessful.let {
                     val recipeIngResult = response?.body()
-                    ings = recipeIngResult?.extendedIngredients
+                    recipe.sourceUrl = recipeIngResult!!.sourceUrl
+                    if(recipeIngResult!!.sourceName != null){
+                        sourceText.text = "From: " + recipeIngResult!!.sourceName
+                    }
+                    if(recipeIngResult!!.readyInMinutes != null){
+                        readyInMinutes.text = "Ready in " + recipeIngResult!!.readyInMinutes + " minutes!"
+                    }
+
+
+                    ings = recipeIngResult.extendedIngredients
                     displayIng(ings!!)
                 }
             }
@@ -155,7 +184,7 @@ class DetailActivity : AppCompatActivity(), View.OnClickListener {
         progressBar = findViewById(R.id.loading_bar) as ProgressBar
         progressBar.visibility = View.VISIBLE
         retriever.getRecipeStepsById(stepsCallback, id)
-        retriever.getRecipeIngById(ingsCallback, id)
+        retriever.getRecipeIngById(recipeIngCallback, id)
     }
 
     companion object {
@@ -196,9 +225,19 @@ class DetailActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        Log.d(TAG, "" + item.itemId + " | "+R.id.action_share)
         when (item.getItemId()) {
             android.R.id.home -> {
                 onBackPressed()
+                return true
+            }
+            R.id.action_share -> {
+                Log.i(TAG, "Share Started" + recipe.sourceUrl)
+                var sendIntent = Intent()
+                sendIntent.setAction(Intent.ACTION_SEND)
+                sendIntent.putExtra(Intent.EXTRA_TEXT, recipe.sourceUrl);
+                sendIntent.setType("text/plain");
+                startActivity(Intent.createChooser(sendIntent, "Send To"))
                 return true
             }
         }
@@ -206,11 +245,29 @@ class DetailActivity : AppCompatActivity(), View.OnClickListener {
         return super.onOptionsItemSelected(item)
     }
 
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        menuInflater.inflate(R.menu.menu_detail, menu)
+        // Locate MenuItem with ShareActionProvider
+//        val item = menu.findItem(R.id.action_share)
+//        mShareActionProvider = MenuItemCompat.getActionProvider(item) as ShareActionProvider
+        return true
+    }
+
+
     private fun toTitleCase(string :String) : String{
         return when (string.length) {
             0 -> ""
             1 -> string.toUpperCase()
             else -> string[0].toUpperCase() + string.substring(1)
         }
+    }
+    private fun listContains(needle : Int, haystack : ArrayList<Int>) : Boolean{
+        haystack.forEach { current ->
+            if(current == needle){
+                return true
+            }
+        }
+        return false
     }
 }
