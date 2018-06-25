@@ -17,6 +17,7 @@ import android.view.inputmethod.EditorInfo
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
+import android.widget.Toast
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentChange
 import com.google.firebase.firestore.DocumentSnapshot
@@ -27,6 +28,10 @@ import com.marcustwichel.recipefinder.adapters.RecyclerListItemTouchHelper
 import com.marcustwichel.recipefinder.model.ListItem
 import java.util.*
 import kotlin.collections.ArrayList
+import com.marcustwichel.recipefinder.api.FirebaseWorker
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 /**
  * A simple [Fragment] subclass.
@@ -44,6 +49,7 @@ class ListFragment : Fragment(), RecyclerListItemTouchHelper.RecyclerItemTouchHe
 
     var mDB : FirebaseFirestore = FirebaseFirestore.getInstance()
     var mAuth : FirebaseAuth = FirebaseAuth.getInstance()
+    var firebaseWorker = FirebaseWorker()
 
     var workingDocument = mDB.collection("groceryLists").document(mAuth.currentUser!!.uid)
     var kitchenDocument = mDB.collection("kitchens").document(mAuth.currentUser!!.uid)
@@ -170,6 +176,7 @@ class ListFragment : Fragment(), RecyclerListItemTouchHelper.RecyclerItemTouchHe
 
 
             moveButton.setOnClickListener(View.OnClickListener { view ->
+                Log.d(TAG, "Button Clicked")
                 moveCheckedToKitchen()
             })
         }
@@ -216,20 +223,27 @@ class ListFragment : Fragment(), RecyclerListItemTouchHelper.RecyclerItemTouchHe
     }
 
     fun moveCheckedToKitchen() {
-        var itemsToDelete = ArrayList<ListItem>()
-        items?.forEach { item ->
-            if(item!!.checked){
-                kitchenItems?.add(0, item.string)
-                itemsToDelete.add(item)
+        var callback = object : Callback<String>{
+            override fun onFailure(call: Call<String>?, t: Throwable?) {
+                Log.e(TAG, "Call Failed", t)
+                Toast.makeText(context, "Operation Failed", Toast.LENGTH_LONG).show()
             }
+
+            override fun onResponse(call: Call<String>?, response: Response<String>?) {
+                if(response != null && response.isSuccessful){
+                    Log.i(TAG, "Call Successful")
+                    Toast.makeText(context, "Kitchen Updated", Toast.LENGTH_LONG).show()
+                }else{
+                    Log.i(TAG, "Call Unsuccessful" + response?.body())
+                    Toast.makeText(context, "Operation Failed", Toast.LENGTH_LONG).show()
+                }
+            }
+
         }
 
-        itemsToDelete.forEach {item ->
-            deletedPos = null
-            workingDocument.collection("items").document(item.id.toString()).delete()
-        }
+        Log.d(TAG, "About to run")
 
-        kitchenDocument.update("items", kitchenItems)
+        firebaseWorker.moveCheckedToKitchen(callback, "EDauBu8gn0gN3UJKwjSF", mAuth.currentUser!!.uid)
     }
 
     interface OnFragmentInteractionListener {

@@ -22,6 +22,8 @@ import android.util.Log
 import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
 import android.widget.*
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.marcustwichel.recipefinder.R
 import com.marcustwichel.recipefinder.model.AutocompleteResult
 import com.marcustwichel.recipefinder.recipefinder.api.RecipeRetriver
@@ -29,15 +31,13 @@ import retrofit2.Call
 import retrofit2.Response
 
 
-/**
- * A simple [Fragment] subclass.
- * Activities that contain this fragment must implement the
- * [KitchenFragment.OnFragmentInteractionListener] interface
- * to handle interaction events.
- * Use the [KitchenFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class KitchenFragment : Fragment(), RecyclerKitchenItemTouchHelper.RecyclerItemTouchHelperListener {
+
+    private val TAG: String? = "KitchenFragment"
+
+    var mDB : FirebaseFirestore = FirebaseFirestore.getInstance()
+    var mAuth : FirebaseAuth = FirebaseAuth.getInstance()
+    var workingDocument = mDB.collection("kitchens").document(mAuth.currentUser!!.uid)
 
     lateinit var recyclerView : RecyclerView
     lateinit var mItemAdapter : KitchenItemAdapter
@@ -60,10 +60,12 @@ class KitchenFragment : Fragment(), RecyclerKitchenItemTouchHelper.RecyclerItemT
         // Inflate the layout for this fragment
         val view = inflater.inflate(R.layout.fragment_kitchen, container, false)
 
+        itemInput = view.findViewById(R.id.add_kitchen_item) as AutoCompleteTextView
+
         mRelativeLayout = view.findViewById(R.id.kitchen_frag_relative_layout) as RelativeLayout
 
         recyclerView = view.findViewById(R.id.kitchen_items_view) as RecyclerView
-        mItemAdapter = KitchenItemAdapter()
+        mItemAdapter = KitchenItemAdapter(kitchenItems)
         recyclerView.layoutManager = LinearLayoutManager(recyclerView.context)
         recyclerView.itemAnimator = DefaultItemAnimator()
         recyclerView.addItemDecoration(DividerItemDecoration(recyclerView.context, DividerItemDecoration.VERTICAL))
@@ -99,7 +101,7 @@ class KitchenFragment : Fragment(), RecyclerKitchenItemTouchHelper.RecyclerItemT
 
         }
 
-        itemInput = view.findViewById(R.id.add_kitchen_item) as AutoCompleteTextView
+
         itemInput.addTextChangedListener(object : TextWatcher{
             override fun afterTextChanged(s: Editable?) {
             }
@@ -121,6 +123,7 @@ class KitchenFragment : Fragment(), RecyclerKitchenItemTouchHelper.RecyclerItemT
 
         }
 
+        //Set keyboard checkmark
         itemInput.setOnEditorActionListener(object : TextView.OnEditorActionListener {
             override fun onEditorAction(view: TextView?, actionId: Int, keyEvent: KeyEvent?): Boolean {
                 var handled : Boolean = false;
@@ -137,7 +140,7 @@ class KitchenFragment : Fragment(), RecyclerKitchenItemTouchHelper.RecyclerItemT
 
     private fun addItemToKitchen() {
         if (!itemInput.text.toString().equals("")) {
-            addItem(itemInput.text.toString())
+            workingDocument.update(itemInput.text.toString(), true)
             itemInput.setText("")
             itemInput.clearFocus()
         }
@@ -149,11 +152,6 @@ class KitchenFragment : Fragment(), RecyclerKitchenItemTouchHelper.RecyclerItemT
             ans.add(item.name)
         }
         return ans
-    }
-
-    private fun addItem(item: String) {
-        mItemAdapter.addItem(item)
-        recyclerView.scrollToPosition(0)
     }
 
 
@@ -171,7 +169,13 @@ class KitchenFragment : Fragment(), RecyclerKitchenItemTouchHelper.RecyclerItemT
         mListener = null
     }
 
-    private val TAG: String? = "KitchenFragment"
+    private fun toTitleCase(string :String) : String{
+        return when (string.length) {
+            0 -> ""
+            1 -> string.toUpperCase()
+            else -> string[0].toUpperCase() + string.substring(1)
+        }
+    }
 
     override fun onSwiped(viewHolder: RecyclerView.ViewHolder?, direction: Int, position: Int?) {
         if (viewHolder is KitchenItemAdapter.KitchenItemViewHolder) {
